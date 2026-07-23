@@ -124,13 +124,6 @@
                 </label>
                 <label class="flex items-center justify-between gap-2 text-sm text-gray-700">
                     <span class="flex items-center gap-2">
-                        <input type="checkbox" class="fp-status-filter rounded accent-orange-500" value="warning" checked>
-                        <span class="h-2.5 w-2.5 rounded-full bg-orange-500"></span> Warning
-                    </span>
-                    <span id="cnt-warning" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">0</span>
-                </label>
-                <label class="flex items-center justify-between gap-2 text-sm text-gray-700">
-                    <span class="flex items-center gap-2">
                         <input type="checkbox" class="fp-status-filter rounded accent-red-500" value="rusak" checked>
                         <span class="h-2.5 w-2.5 rounded-full bg-red-500"></span> Error
                     </span>
@@ -494,7 +487,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const state = {
         floorId: {{ $selectedFloor ? $selectedFloor->id : 'null' }},
         lamps: [],
-        counts: { on: 0, off: 0, warning: 0, rusak: 0 },
+        counts: { on: 0, off: 0, rusak: 0 },
         floorImage: @json($selectedFloorImage),
         zoom: 1,
         panX: 0,
@@ -506,30 +499,27 @@ document.addEventListener('DOMContentLoaded', function () {
         editMode: false,
         showFloor: true,
         showLamps: true,
-        activeStatuses: ['on', 'off', 'warning', 'rusak'],
+        activeStatuses: ['on', 'off', 'rusak'],
         searchText: '',
         filterStartDate: '',
         filterEndDate: '',
         draggingLamp: null,
     };
 
-    const statuses = ['on', 'off', 'warning', 'rusak'];
+    const statuses = ['on', 'off', 'rusak'];
     const colorMap = {
         on: '#22c55e',
         off: '#4b5563',
-        warning: '#f97316',
         rusak: '#ef4444',
     };
     const labelMap = {
         on: 'Aktif',
         off: 'Mati',
-        warning: 'Warning',
         rusak: 'Error',
     };
     const badgeMap = {
         on: 'bg-green-100 text-green-700',
         off: 'bg-gray-100 text-gray-700',
-        warning: 'bg-orange-100 text-orange-700',
         rusak: 'bg-red-100 text-red-700',
     };
 
@@ -743,7 +733,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const total = statuses.reduce((sum, status) => sum + (state.counts[status] || 0), 0);
         $('statTotal').textContent = total;
         $('statAktif').textContent = state.counts.on || 0;
-        $('statMasalah').textContent = (state.counts.warning || 0) + (state.counts.rusak || 0);
+        $('statMasalah').textContent = state.counts.rusak || 0;
     }
 
     function matchesSearchLamp(lamp) {
@@ -798,7 +788,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             } else {
                 wrap.style.opacity = '1';
-                if (lamp.status === 'warning' || lamp.status === 'rusak') {
+                if (lamp.status === 'rusak') {
                     const ring = document.createElement('span');
                     ring.className = 'absolute inset-0 rounded-full';
                     ring.style.background = colorMap[lamp.status];
@@ -927,7 +917,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const data = await res.json();
         state.lamps = data.lamps || [];
-        state.counts = Object.assign({ on: 0, off: 0, warning: 0, rusak: 0 }, data.lamp_counts || {});
+        state.counts = Object.assign({ on: 0, off: 0, rusak: 0 }, data.lamp_counts || {});
         updateStats();
         setFloorImage(data.floor?.floor_plan_image || '');
         renderDots();
@@ -1486,7 +1476,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 } else {
                     dot.style.opacity = '1';
-                    if (lamp.status === 'warning' || lamp.status === 'rusak') {
+                    if (lamp.status === 'rusak') {
                         const ring = document.createElement('span');
                         ring.className = 'absolute inset-0 rounded-full';
                         ring.style.background = colorMap[lamp.status];

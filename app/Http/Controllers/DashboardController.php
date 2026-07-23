@@ -36,7 +36,7 @@ class DashboardController extends Controller
 
         // ── KPI Cards ──────────────────────────────────────────────────────
         $totalTitikLampu   = Lamp::count();
-        $lampuTerpasang    = Lamp::whereIn('status', ['on', 'warning'])->count();
+        $lampuTerpasang    = Lamp::where('status', 'on')->count();
         
         $lampuDigantiBulan = Maintenance::where('type', 'penggantian')
             ->where(function ($q) use ($selectedMonth, $selectedYear) {
@@ -57,8 +57,8 @@ class DashboardController extends Controller
             ->pluck('total', 'status')
             ->toArray();
 
-        $statusLabels = ['on', 'off', 'rusak', 'warning'];
-        $statusNames  = ['Aktif', 'Mati', 'Rusak', 'Warning'];
+        $statusLabels = ['on', 'off', 'rusak'];
+        $statusNames  = ['Aktif', 'Mati', 'Rusak'];
         $statusData   = array_map(fn($s) => $statusCounts[$s] ?? 0, $statusLabels);
 
         // ── Tabel: Maintenance Terbaru ─────────────────────────────────────

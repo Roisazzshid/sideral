@@ -107,13 +107,7 @@ class MaintenanceController extends Controller
         if ($maintenance->status === 'completed') {
             $lamp->update(['status' => 'on']);
         } elseif (in_array($maintenance->status, ['pending', 'in_progress'], true)) {
-            if ($maintenance->type === 'Lampu Flicker') {
-                $lamp->update(['status' => 'warning']);
-            } elseif ($maintenance->type === 'Pembersihan') {
-                $lamp->update(['status' => 'warning']);
-            } else {
-                $lamp->update(['status' => 'rusak']);
-            }
+            $lamp->update(['status' => 'rusak']);
         }
     }
 

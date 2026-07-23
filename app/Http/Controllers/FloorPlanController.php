@@ -192,7 +192,6 @@ class FloorPlanController extends Controller
                 'on'      => $lamps->where('status', 'on')->count(),
                 'off'     => $lamps->where('status', 'off')->count(),
                 'rusak'   => $lamps->where('status', 'rusak')->count(),
-                'warning' => $lamps->where('status', 'warning')->count(),
             ];
 
             $floorImage = '';
@@ -292,7 +291,7 @@ class FloorPlanController extends Controller
     public function updateLampStatus(Request $request, $lampId)
     {
         $validated = $request->validate([
-            'status' => 'required|in:on,off,rusak,warning',
+            'status' => 'required|in:on,off,rusak',
         ]);
 
         $lamp = Lamp::findOrFail($lampId);

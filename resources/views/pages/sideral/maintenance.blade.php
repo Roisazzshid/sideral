@@ -492,7 +492,6 @@
                 <div class="flex items-center gap-3 text-xs text-gray-600">
                     <span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-full bg-green-500"></span> Aktif</span>
                     <span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-full bg-gray-500"></span> Mati</span>
-                    <span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-full bg-orange-500"></span> Warning</span>
                     <span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-full bg-red-500"></span> Error</span>
                 </div>
             </div>
@@ -744,7 +743,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     let bgClass = 'bg-green-500';
                     if (lamp.status === 'off') bgClass = 'bg-gray-500';
-                    else if (lamp.status === 'warning') bgClass = 'bg-orange-500';
                     else if (lamp.status === 'rusak') bgClass = 'bg-red-500';
 
                     dot.className = `absolute cursor-pointer flex items-center justify-center transition-all duration-150 rounded-full text-[10px] font-bold text-white shadow-md hover:scale-125 hover:z-30 ${bgClass} ${isSelected ? 'ring-4 ring-teal-400 scale-125 z-30' : ''}`;

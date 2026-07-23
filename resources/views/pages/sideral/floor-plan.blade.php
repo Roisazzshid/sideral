@@ -77,6 +77,13 @@
 
     <input id="fpSearch" type="text" placeholder="Cari kode / jenis lampu..." class="w-48 sm:w-64 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500">
 
+    <button id="btnTogglePanel" type="button" class="lg:hidden inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-teal-700">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+        </svg>
+        Filter
+    </button>
+
     <div class="flex-1"></div>
 
     <button id="btnEditMode" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
@@ -96,8 +103,8 @@
     </button>
 </div>
 
-<div class="flex flex-col gap-4 lg:flex-row items-start" style="min-height: 620px;">
-    <aside id="fpPanel" class="w-full flex-shrink-0 rounded-lg border border-gray-200 bg-white p-4 lg:w-72 lg:max-h-[calc(100vh-175px)] lg:overflow-y-auto shadow-sm sticky top-4 space-y-5">
+<div class="flex flex-col gap-4 lg:flex-row items-stretch lg:items-start" style="min-height: 620px;">
+    <aside id="fpPanel" class="hidden lg:block w-full flex-shrink-0 rounded-lg border border-gray-200 bg-white p-4 lg:w-72 lg:max-h-[calc(100vh-175px)] lg:overflow-y-auto shadow-sm sticky top-4 space-y-5">
         <div>
             <p class="mb-2 text-xs font-semibold uppercase text-gray-500">Status Lampu</p>
             <div class="space-y-2">
@@ -199,7 +206,7 @@
         </div>
     </aside>
 
-    <section id="fpCanvas" class="relative min-h-[600px] flex-1 overflow-hidden rounded-lg border border-gray-200 bg-slate-100" style="cursor: grab;">
+    <section id="fpCanvas" class="relative min-h-[600px] w-full lg:w-auto lg:flex-1 overflow-hidden rounded-lg border border-gray-200 bg-slate-100" style="cursor: grab;">
         <div class="absolute right-3 top-3 z-20 flex items-center gap-1">
             <button id="btnZoomIn" class="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50" title="Zoom in">+</button>
             <button id="btnZoomOut" class="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50" title="Zoom out">-</button>

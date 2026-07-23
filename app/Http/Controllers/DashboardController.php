@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Lamp;
 use App\Models\LampType;
 use App\Models\Maintenance;
+use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -37,19 +38,10 @@ class DashboardController extends Controller
         // ── KPI Cards ──────────────────────────────────────────────────────
         $totalTitikLampu   = Lamp::count();
         $lampuTerpasang    = Lamp::where('status', 'on')->count();
-        
-        $lampuDigantiBulan = Maintenance::where('type', 'penggantian')
-            ->where(function ($q) use ($selectedMonth, $selectedYear) {
-                $q->where(function ($sub) use ($selectedMonth, $selectedYear) {
-                    $sub->whereMonth('completed_date', $selectedMonth)
-                        ->whereYear('completed_date', $selectedYear);
-                })->orWhere(function ($sub) use ($selectedMonth, $selectedYear) {
-                    $sub->whereNull('completed_date')
-                        ->whereMonth('created_at', $selectedMonth)
-                        ->whereYear('created_at', $selectedYear);
-                });
-            })
-            ->count();
+        $lampuDigantiBulan = Transaction::where('type', 'penggantian')
+            ->whereMonth('transaction_date', $selectedMonth)
+            ->whereYear('transaction_date', $selectedYear)
+            ->sum('quantity');
 
         // ── Donut Chart – Status Lampu ──────────────────────────────────
         $statusCounts = Lamp::select('status', DB::raw('COUNT(*) as total'))

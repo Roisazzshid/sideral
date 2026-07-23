@@ -444,7 +444,8 @@
                     <table class="w-full text-left text-xs border-collapse">
                         <thead class="bg-gray-100 text-gray-700 font-semibold text-[11px] border-b border-gray-200">
                             <tr>
-                                <th class="px-3 py-2">Tanggal</th>
+                                <th class="px-3 py-2">Tgl Mati</th>
+                                <th class="px-3 py-2">Tgl Diganti</th>
                                 <th class="px-3 py-2">Teknisi & Catatan</th>
                                 <th class="px-3 py-2 text-right">Selisih Penggantian</th>
                             </tr>
@@ -557,8 +558,8 @@ document.addEventListener('DOMContentLoaded', function () {
         let endMs = endDateVal ? new Date(endDateVal + 'T23:59:59').getTime() : null;
 
         return lamp.history.some(row => {
-            if (!row.date) return false;
-            let dMs = parseHistoryDateToMs(row.date);
+            if (!row.tgl_diganti) return false;
+            let dMs = parseHistoryDateToMs(row.tgl_diganti);
             if (!dMs) return false;
 
             if (startMs && dMs < startMs) return false;
@@ -863,7 +864,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     el.className = 'border-b border-gray-100 pb-1 last:border-b-0 last:pb-0 mb-1';
                     el.innerHTML = `
                         <div class="flex justify-between font-semibold">
-                            <span>${row.date}</span>
+                            <span>Mati: ${row.tgl_mati} | Ganti: ${row.tgl_diganti}</span>
                             <span class="text-teal-700 font-medium">${row.technician}</span>
                         </div>
                         <div class="text-[11px] text-gray-500">${row.notes}</div>
@@ -1394,7 +1395,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         historyRows.push({
                             lamp_code: lamp.code,
                             lamp_type: lamp.lamp_type?.name || 'Lampu',
-                            date: h.date,
+                            date: h.tgl_diganti,
                             technician: h.technician || '-',
                             notes: h.notes || 'Penggantian lampu',
                         });
@@ -1739,27 +1740,21 @@ document.addEventListener('DOMContentLoaded', function () {
             tbody.innerHTML = '';
             const history = lamp.history ? [...lamp.history] : [];
 
-            // Sort ascending by date for interval calculation
-            history.sort((a, b) => {
-                const msA = parseHistoryDateToMs(a.date) || 0;
-                const msB = parseHistoryDateToMs(b.date) || 0;
-                return msA - msB;
-            });
+            // Sort descending by date (most recent first) using pre-calculated timestamp from backend
+            history.sort((a, b) => (b.ts || 0) - (a.ts || 0));
 
             if (history.length > 0) {
-                history.forEach((h, idx) => {
-                    const prevDate = idx > 0 ? history[idx - 1].date : null;
-                    const intervalText = calculateDateIntervalLabel(prevDate, h.date);
-
+                history.forEach((h) => {
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-slate-50 transition-colors';
                     tr.innerHTML = `
-                        <td class="px-3 py-2.5 font-semibold text-gray-800 whitespace-nowrap">${h.date || '-'}</td>
+                        <td class="px-3 py-2.5 font-semibold text-gray-800 whitespace-nowrap">${h.tgl_mati || '-'}</td>
+                        <td class="px-3 py-2.5 font-semibold text-gray-800 whitespace-nowrap">${h.tgl_diganti || '-'}</td>
                         <td class="px-3 py-2.5 text-gray-600">
                             <span class="font-bold text-gray-800">${h.technician || '-'}</span>
                             <div class="text-[10px] text-gray-500">${h.notes || 'Penggantian lampu'}</div>
                         </td>
-                        <td class="px-3 py-2.5 text-right font-medium whitespace-nowrap">${intervalText}</td>
+                        <td class="px-3 py-2.5 text-right font-medium whitespace-nowrap">${h.diff || '-'}</td>
                     `;
                     tbody.appendChild(tr);
                 });

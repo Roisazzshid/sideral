@@ -118,45 +118,38 @@ class FloorPlanController extends Controller
                 return response()->json(['error' => 'Floor not found'], 404);
             }
 
-            $lamps = $floor->lamps()->with(['lampType', 'transactions', 'maintenances'])->get()->map(function ($lamp) use ($floor) {
+            $lamps = $floor->lamps()->with(['lampType', 'maintenances'])->get()->map(function ($lamp) use ($floor) {
                 $historyList = [];
 
                 if ($lamp->maintenances) {
                     foreach ($lamp->maintenances as $mt) {
                         try {
-                            $d = $mt->completed_date ?: $mt->scheduled_date ?: $mt->created_at;
-                            $dateStr = $d ? \Carbon\Carbon::parse($d)->format('d/m/Y') : '-';
-                            $ts = $d ? \Carbon\Carbon::parse($d)->timestamp : 0;
+                            $tglMati = $mt->created_at ? \Carbon\Carbon::parse($mt->created_at)->format('d/m/Y') : '-';
+                            $tglDiganti = $mt->completed_date ? \Carbon\Carbon::parse($mt->completed_date)->format('d/m/Y') : '-';
+                            
+                            $createdAt = \Carbon\Carbon::parse($mt->created_at)->startOfDay();
+                            $completedAt = $mt->completed_date ? \Carbon\Carbon::parse($mt->completed_date)->startOfDay() : null;
+                            $diff = $completedAt ? ((int) $createdAt->diffInDays($completedAt)) . ' hari' : '-';
+                            $ts = $mt->created_at ? \Carbon\Carbon::parse($mt->created_at)->timestamp : 0;
                         } catch (\Throwable $e) {
-                            $dateStr = '-';
+                            $tglMati = '-';
+                            $tglDiganti = '-';
+                            $diff = '-';
                             $ts = 0;
                         }
 
-                        $historyList[] = [
-                            'date'       => $dateStr,
-                            'technician' => $mt->assigned_to ?: 'Teknisi',
-                            'notes'      => ($mt->type ? '[' . $mt->type . '] ' : '') . ($mt->resolution_notes ?: $mt->description ?: 'Pemeliharaan'),
-                            'ts'         => $ts,
-                        ];
-                    }
-                }
-
-                if ($lamp->transactions) {
-                    foreach ($lamp->transactions as $tx) {
-                        try {
-                            $d = $tx->transaction_date ?: $tx->created_at;
-                            $dateStr = $d ? \Carbon\Carbon::parse($d)->format('d/m/Y') : '-';
-                            $ts = $d ? \Carbon\Carbon::parse($d)->timestamp : 0;
-                        } catch (\Throwable $e) {
-                            $dateStr = '-';
-                            $ts = 0;
+                        $notes = ($mt->type ? '[' . $mt->type . '] ' : '') . ($mt->description ?: '');
+                        if ($mt->resolution_notes) {
+                            $notes .= ' (' . $mt->resolution_notes . ')';
                         }
 
                         $historyList[] = [
-                            'date'       => $dateStr,
-                            'technician' => $tx->technician ?: 'Teknisi',
-                            'notes'      => $tx->notes ?: 'Penggantian Lampu',
-                            'ts'         => $ts,
+                            'tgl_mati'    => $tglMati,
+                            'tgl_diganti' => $tglDiganti,
+                            'technician'  => $mt->assigned_to ?: 'Teknisi',
+                            'notes'       => $notes,
+                            'diff'        => $diff,
+                            'ts'          => $ts,
                         ];
                     }
                 }

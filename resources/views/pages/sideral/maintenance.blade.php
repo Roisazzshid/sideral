@@ -539,8 +539,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const fields = {
         building: document.getElementById('mtBuilding'),
         floor: document.getElementById('mtFloor'),
+        lamp: document.getElementById('mtLamp'),
+        type: document.getElementById('mtType'),
+        description: document.getElementById('mtDescription'),
+        priority: document.getElementById('mtPriority'),
+        scheduledDate: document.getElementById('mtScheduledDate'),
         assignedTo: document.getElementById('mtAssignedTo'),
-    };
+        status: document.getElementById('mtStatus'),
     };
 
     const selectedLampBadge = document.getElementById('selectedLampBadge');

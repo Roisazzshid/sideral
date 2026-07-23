@@ -153,6 +153,7 @@ class ReportController extends Controller
             $location = $buildingName . ' / ' . $floorName;
 
             $list[] = [
+                'id'             => $tx->id,
                 'date'           => $tx->transaction_date?->format('d/m/Y') ?: '-',
                 'lamp_code'      => $tx->lamp?->code ?: '-',
                 'lamp_type_name' => $typeName,

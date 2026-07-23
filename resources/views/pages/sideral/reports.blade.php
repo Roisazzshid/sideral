@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-    <!-- Print-optimized styles -->
     <style>
         @media print {
             body {
@@ -36,12 +35,33 @@
                 display: block !important;
                 width: 100% !important;
             }
+            .overflow-x-auto {
+                overflow: visible !important;
+            }
+            table {
+                width: 100% !important;
+                table-layout: auto !important;
+                font-size: 10px !important;
+            }
+            th, td {
+                white-space: normal !important;
+                word-wrap: break-word !important;
+                padding: 6px 4px !important;
+            }
+            .whitespace-nowrap {
+                white-space: normal !important;
+            }
         }
     </style>
 
     <x-common.page-breadcrumb pageTitle="Report" class="no-print" />
 
     <div class="space-y-5">
+        @if(session('success'))
+            <div class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 no-print">
+                {{ session('success') }}
+            </div>
+        @endif
         <!-- Top Controls / Filter Bar -->
         <div class="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white px-5 py-4 lg:flex-row lg:items-center lg:justify-between no-print">
             <div>
@@ -122,6 +142,7 @@
                                 <th class="px-5 py-3 text-right">Jumlah</th>
                                 <th class="px-5 py-3">Teknisi</th>
                                 <th class="px-5 py-3">Keterangan</th>
+                                <th class="px-5 py-3 text-right no-print">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -140,10 +161,22 @@
                                     <td class="px-5 py-3.5 text-right font-bold text-gray-900 whitespace-nowrap">{{ number_format($row['quantity']) }} Unit</td>
                                     <td class="px-5 py-3.5 text-gray-700 whitespace-nowrap">{{ $row['technician'] }}</td>
                                     <td class="px-5 py-3.5 text-gray-500 text-xs">{{ $row['notes'] }}</td>
+                                    <td class="px-5 py-3.5 text-right no-print">
+                                        <form method="POST" action="{{ route('transactions.destroy', $row['id']) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus transaksi ini? Stok inventaris akan dikembalikan.');" class="inline-block">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-100 bg-red-50 text-red-600 hover:bg-red-100" title="Hapus Transaksi">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="px-5 py-12 text-center text-sm text-gray-400 italic">
+                                    <td colspan="10" class="px-5 py-12 text-center text-sm text-gray-400 italic">
                                         Tidak ada catatan transaksi pemakaian atau penggantian lampu pada periode ini.
                                     </td>
                                 </tr>

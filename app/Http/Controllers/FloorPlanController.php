@@ -234,6 +234,24 @@ class FloorPlanController extends Controller
         $nextId = (Lamp::max('id') ?? 0) + 1;
         $code = 'L-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
 
+        $lampType = LampType::find($validated['lamp_type_id']);
+        $w = 20;
+        $h = 20;
+        if ($lampType) {
+            $typeUpper = strtoupper($lampType->type ?? '');
+            $shapeLower = strtolower($lampType->shape ?? '');
+            if ($typeUpper === 'T5' || $shapeLower === 'garis') {
+                $w = 32;
+                $h = 4;
+            } elseif ($typeUpper === 'TL 1' || $typeUpper === 'TL1') {
+                $w = 32;
+                $h = 6;
+            } elseif ($typeUpper === 'TL 2' || $typeUpper === 'TL2' || $shapeLower === 'persegi_panjang') {
+                $w = 32;
+                $h = 14;
+            }
+        }
+
         $lamp = Lamp::create([
             'floor_id'     => $validated['floor_id'],
             'lamp_type_id' => $validated['lamp_type_id'],
@@ -241,6 +259,8 @@ class FloorPlanController extends Controller
             'position_x'   => $validated['position_x'],
             'position_y'   => $validated['position_y'],
             'status'       => 'on',
+            'width'        => $w,
+            'height'       => $h,
         ]);
 
         $lamp->load(['lampType', 'floor']);

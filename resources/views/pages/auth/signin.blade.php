@@ -41,14 +41,14 @@
                         <div class="mb-6 rounded-lg bg-slate-50 border border-slate-200 p-4 dark:bg-gray-800 dark:border-gray-700">
                             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pilih Akun Demo (1-Click Login):</p>
                             <div class="grid grid-cols-2 gap-2">
-                                <button type="button" onclick="fillLogin('admin@sideral.com', 'password')" class="rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-800 hover:bg-teal-100 transition text-left">
+                                <a href="{{ route('autologin', 'admin') }}" class="rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-800 hover:bg-teal-100 transition text-left block">
                                     <div class="font-bold">🔑 Admin</div>
                                     <div class="text-[11px] text-teal-600 font-normal">Full Akses Semua Fitur</div>
-                                </button>
-                                <button type="button" onclick="fillLogin('teknisi@sideral.com', 'password')" class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800 hover:bg-blue-100 transition text-left">
+                                </a>
+                                <a href="{{ route('autologin', 'teknisi') }}" class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800 hover:bg-blue-100 transition text-left block">
                                     <div class="font-bold">🔧 Teknisi</div>
                                     <div class="text-[11px] text-blue-600 font-normal">Khusus Fitur Maintenance</div>
-                                </button>
+                                </a>
                             </div>
                         </div>
 
@@ -98,6 +98,11 @@
                                         Masuk
                                     </button>
                                 </div>
+
+                                <!-- Troubleshooting Note -->
+                                <p class="text-xs text-center text-gray-500 mt-2">
+                                    💡 Kendala masuk? Gunakan tombol <strong>1-Click Login</strong> di atas untuk masuk langsung secara instan.
+                                </p>
                             </div>
                         </form>
                     </div>
@@ -120,12 +125,4 @@
             </div>
         </div>
     </div>
-
-    <script>
-        function fillLogin(email, password) {
-            document.getElementById('email').value = email;
-            document.getElementById('password').value = password;
-            document.getElementById('loginForm').submit();
-        }
-    </script>
 @endsection

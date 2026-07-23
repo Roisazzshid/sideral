@@ -92,8 +92,8 @@
     </button>
 </div>
 
-<div class="flex flex-col gap-4 xl:flex-row items-start" style="min-height: 620px;">
-    <aside id="fpPanel" class="w-full flex-shrink-0 rounded-lg border border-gray-200 bg-white p-4 xl:w-72 xl:max-h-[calc(100vh-175px)] xl:overflow-y-auto shadow-sm sticky top-4">
+<div class="flex flex-col gap-4 lg:flex-row items-start" style="min-height: 620px;">
+    <aside id="fpPanel" class="w-full flex-shrink-0 rounded-lg border border-gray-200 bg-white p-4 lg:w-72 lg:max-h-[calc(100vh-175px)] lg:overflow-y-auto shadow-sm sticky top-4">
         <div>
             <p class="mb-2 text-xs font-semibold uppercase text-gray-500">Status Lampu</p>
             <div class="space-y-2">
@@ -680,6 +680,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const containerWidth = canvasEl.clientWidth;
             if (containerWidth > 0) {
                 const targetHeight = Math.round((containerWidth * img.naturalHeight) / img.naturalWidth);
+                canvasEl.style.minHeight = '0px';
                 canvasEl.style.height = targetHeight + 'px';
             }
         }
@@ -712,6 +713,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             layer.innerHTML = fallbackSvg();
             if (canvasEl) {
+                canvasEl.style.minHeight = '600px';
                 canvasEl.style.height = '600px';
             }
         }

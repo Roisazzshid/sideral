@@ -73,6 +73,10 @@
         </select>
     </div>
 
+    <div class="h-6 w-px bg-gray-200"></div>
+
+    <input id="fpSearch" type="text" placeholder="Cari kode / jenis lampu..." class="w-48 sm:w-64 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500">
+
     <div class="flex-1"></div>
 
     <button id="btnEditMode" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
@@ -93,7 +97,7 @@
 </div>
 
 <div class="flex flex-col gap-4 lg:flex-row items-start" style="min-height: 620px;">
-    <aside id="fpPanel" class="w-full flex-shrink-0 rounded-lg border border-gray-200 bg-white p-4 lg:w-72 lg:max-h-[calc(100vh-175px)] lg:overflow-y-auto shadow-sm sticky top-4">
+    <aside id="fpPanel" class="w-full flex-shrink-0 rounded-lg border border-gray-200 bg-white p-4 lg:w-72 lg:max-h-[calc(100vh-175px)] lg:overflow-y-auto shadow-sm sticky top-4 space-y-5">
         <div>
             <p class="mb-2 text-xs font-semibold uppercase text-gray-500">Status Lampu</p>
             <div class="space-y-2">
@@ -130,10 +134,7 @@
 
         <hr class="my-4 border-gray-100">
 
-        <div>
-            <p class="mb-2 text-xs font-semibold uppercase text-gray-500">Pencarian</p>
-            <input id="fpSearch" type="text" placeholder="Cari kode / jenis lampu..." class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500">
-        </div>
+
 
         <hr class="my-4 border-gray-100">
 
@@ -1061,26 +1062,41 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    if ($('ttDelete')) {
-        $('ttDelete').addEventListener('click', async function () {
-            const lamp = window._fpActiveLamp;
-            if (!lamp) return;
-            if (!confirm('Hapus titik lampu "' + lamp.code + '"?')) return;
-
-            const res = await fetch('/floor-plan/lamp/' + lamp.id, {
+    async function deleteLamp(lampId) {
+        if (!lampId) return false;
+        try {
+            const res = await fetch('/floor-plan/lamp/' + lampId, {
                 method: 'DELETE',
                 headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF },
             });
             if (!res.ok) {
                 alert('Gagal menghapus titik lampu.');
-                return;
+                return false;
             }
 
-            state.lamps = state.lamps.filter((item) => item.id !== lamp.id);
-            state.counts[lamp.status] = Math.max(0, (state.counts[lamp.status] || 0) - 1);
-            updateStats();
+            const deletedLamp = state.lamps.find((item) => item.id === lampId);
+            if (deletedLamp) {
+                state.lamps = state.lamps.filter((item) => item.id !== lampId);
+                state.counts[deletedLamp.status] = Math.max(0, (state.counts[deletedLamp.status] || 0) - 1);
+                updateStats();
+            }
+
             hideTooltip();
             renderDots();
+            return true;
+        } catch (err) {
+            console.error('Error deleting lamp:', err);
+            alert('Terjadi kesalahan saat menghapus titik lampu.');
+            return false;
+        }
+    }
+
+    if ($('ttDelete')) {
+        $('ttDelete').addEventListener('click', async function () {
+            const lamp = window._fpActiveLamp;
+            if (!lamp) return;
+            if (!confirm('Hapus titik lampu "' + lamp.code + '"?')) return;
+            await deleteLamp(lamp.id);
         });
     }
 
@@ -1356,7 +1372,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const floorSelect = $('floorSelect');
         if ($('printBuildingName')) $('printBuildingName').textContent = buildingSelect ? buildingSelect.options[buildingSelect.selectedIndex]?.text : '-';
         if ($('printFloorName')) $('printFloorName').textContent = floorSelect ? floorSelect.options[floorSelect.selectedIndex]?.text : '-';
-        
+
         let dateRangeLabel = 'Semua Tanggal';
         if (state.filterStartDate && state.filterEndDate) {
             dateRangeLabel = `${state.filterStartDate} s/d ${state.filterEndDate}`;
@@ -1779,8 +1795,10 @@ document.addEventListener('DOMContentLoaded', function () {
         $('modalBtnDeleteLamp').addEventListener('click', async function () {
             if (!state.selectedLamp) return;
             if (confirm(`Apakah Anda yakin ingin menghapus titik lampu ${state.selectedLamp.code}?`)) {
-                await deleteLamp(state.selectedLamp.id);
-                closeLampDetailModal();
+                const ok = await deleteLamp(state.selectedLamp.id);
+                if (ok) {
+                    closeLampDetailModal();
+                }
             }
         });
     }

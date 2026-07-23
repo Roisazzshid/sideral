@@ -162,7 +162,7 @@
                                     <td class="px-5 py-3.5 text-gray-700 whitespace-nowrap">{{ $row['technician'] }}</td>
                                     <td class="px-5 py-3.5 text-gray-500 text-xs">{{ $row['notes'] }}</td>
                                     <td class="px-5 py-3.5 text-right no-print">
-                                        <form method="POST" action="{{ route('transactions.destroy', $row['id']) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus transaksi ini? Stok inventaris akan dikembalikan.');" class="inline-block">
+                                        <form method="POST" action="{{ route('transactions.destroy', $row['id']) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus ini?');" class="inline-block">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-100 bg-red-50 text-red-600 hover:bg-red-100" title="Hapus Transaksi">

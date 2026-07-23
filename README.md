@@ -28,7 +28,7 @@ Anda dapat memasang aplikasi ini baik dari file unduhan **ZIP** maupun melakukan
 * **Opsi B (Jika menggunakan Git):**
   Buka terminal/command prompt, lalu jalankan perintah berikut:
   ```bash
-  git clone <url-repository-github-anda>
+  git clone https://github.com/Roisazzshid/sideral.git
   cd sideral
   ```
 

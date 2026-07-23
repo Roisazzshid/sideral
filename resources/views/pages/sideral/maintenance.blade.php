@@ -100,7 +100,7 @@
                             <tr>
                                 <th class="w-16 px-5 py-3">No</th>
                                 <th class="px-5 py-3">Tanggal Jadwal</th>
-                                <th class="px-5 py-3">Area / Ruangan</th>
+                                <th class="px-5 py-3">Area / Lantai</th>
                                 <th class="px-5 py-3">Nomor Lampu</th>
                                 <th class="px-5 py-3">Jenis Masalah</th>
                                 <th class="px-5 py-3">Deskripsi</th>
@@ -116,8 +116,8 @@
                                     <td class="px-5 py-4 text-gray-500">{{ $index + 1 }}</td>
                                     <td class="px-5 py-4 text-gray-700">{{ $mt->scheduled_date?->format('d/m/Y') ?: '-' }}</td>
                                     <td class="px-5 py-4 text-gray-700">
-                                        <div class="font-medium text-gray-800">{{ $mt->room?->name ?? '-' }}</div>
-                                        <div class="text-xs text-gray-500">{{ $mt->room?->floor?->building?->name ?? '-' }} / {{ $mt->room?->floor?->name ?? '-' }}</div>
+                                        <div class="font-medium text-gray-800">{{ $mt->floor?->name ?? '-' }}</div>
+                                        <div class="text-xs text-gray-500">{{ $mt->floor?->building?->name ?? '-' }}</div>
                                     </td>
                                     <td class="px-5 py-4">
                                         <span class="font-semibold text-teal-700">{{ $mt->lamp?->code ?? '-' }}</span>
@@ -159,7 +159,7 @@
                                                     class="btn-edit-maintenance inline-flex h-8 w-8 items-center justify-center rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50"
                                                     title="Edit Permintaan Pekerjaan"
                                                     data-action="{{ route('maintenance.update', $mt) }}"
-                                                    data-room-id="{{ $mt->room_id }}"
+                                                    data-floor-id="{{ $mt->floor_id }}"
                                                     data-lamp-id="{{ $mt->lamp_id }}"
                                                     data-type="{{ $mt->type }}"
                                                     data-description="{{ $mt->description }}"
@@ -352,11 +352,10 @@
                     </div>
                     <div>
                         <label for="mtFloor" class="mb-1 block text-sm font-medium text-gray-700">Lantai</label>
-                        <select id="mtFloor" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
+                        <select id="mtFloor" name="floor_id" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
                             <option value="">Pilih Lantai</option>
                         </select>
                     </div>
-                    <input id="mtRoom" type="hidden" name="room_id" value="">
 
                     <div class="md:col-span-2">
                         <label for="mtLamp" class="mb-1 block text-sm font-medium text-gray-700">Pilih Titik Lampu (Kode Lampu)</label>
@@ -529,7 +528,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const allBuildings = @json($buildings);
     const allLamps = @json($lamps);
-    const allRooms = @json($rooms);
+    const allRooms = [];
 
     // Main CRUD Modal Elements
     const modal = document.getElementById('maintenanceModal');
@@ -540,14 +539,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const fields = {
         building: document.getElementById('mtBuilding'),
         floor: document.getElementById('mtFloor'),
-        room: document.getElementById('mtRoom'),
-        lamp: document.getElementById('mtLamp'),
-        type: document.getElementById('mtType'),
-        description: document.getElementById('mtDescription'),
-        priority: document.getElementById('mtPriority'),
-        status: document.getElementById('mtStatus'),
-        scheduledDate: document.getElementById('mtScheduledDate'),
         assignedTo: document.getElementById('mtAssignedTo'),
+    };
     };
 
     const selectedLampBadge = document.getElementById('selectedLampBadge');
@@ -604,25 +597,17 @@ document.addEventListener('DOMContentLoaded', function () {
         fields.lamp.innerHTML = '<option value="">-- Tanpa Titik Lampu --</option>';
 
         if (!floorId) {
-            fields.room.value = '';
             updateLampBadge(null);
             return;
         }
 
-        // Set default room_id to first room of the floor
-        const floorRooms = allRooms.filter(r => r.floor_id == floorId);
-        if (floorRooms.length > 0 && !fields.room.value) {
-            fields.room.value = floorRooms[0].id;
-        }
-
         // Populate lamps for this floor
-        const floorLamps = allLamps.filter(l => l.room && l.room.floor_id == floorId);
+        const floorLamps = allLamps.filter(l => l.floor_id == floorId);
         floorLamps.forEach(lamp => {
             const opt = document.createElement('option');
             opt.value = lamp.id;
             const typeName = lamp.lamp_type ? lamp.lamp_type.name : 'Lampu';
-            const roomName = lamp.room ? lamp.room.name : '';
-            opt.textContent = `${lamp.code} (${typeName}) ${roomName ? '- ' + roomName : ''}`;
+            opt.textContent = `${lamp.code} (${typeName})`;
             if (selectedLampId && lamp.id == selectedLampId) {
                 opt.selected = true;
             }
@@ -633,7 +618,6 @@ document.addEventListener('DOMContentLoaded', function () {
             fields.lamp.value = selectedLampId;
             const chosenLamp = allLamps.find(l => l.id == selectedLampId);
             if (chosenLamp) {
-                fields.room.value = chosenLamp.room_id;
                 updateLampBadge(chosenLamp);
             }
         } else {
@@ -649,7 +633,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             selectedLampBadge.classList.remove('hidden');
             selectedLampBadge.classList.add('flex');
-            const areaName = lamp.room ? `${lamp.room.floor?.building?.name || ''} / ${lamp.room.floor?.name || ''} / ${lamp.room.name}` : '';
+            const areaName = lamp.floor ? `${lamp.floor.building?.name || ''} / ${lamp.floor.name || ''}` : '';
             selectedLampInfo.textContent = `Titik Lampu Dipilih: ${lamp.code} (${lamp.lamp_type?.name || 'Lampu'}) ${areaName ? ' - ' + areaName : ''}`;
         }
     }
@@ -662,14 +646,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     fields.floor?.addEventListener('change', function () {
-        const fId = this.value;
-        if (fId) {
-            const floorRooms = allRooms.filter(r => r.floor_id == fId);
-            fields.room.value = floorRooms.length > 0 ? floorRooms[0].id : '';
-        } else {
-            fields.room.value = '';
-        }
-        updateLampsAndRoom(fId);
+        updateLampsAndRoom(this.value);
     });
 
     fields.lamp?.addEventListener('change', function () {
@@ -677,10 +654,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (lId) {
             const lamp = allLamps.find(l => l.id == lId);
             if (lamp) {
-                fields.room.value = lamp.room_id;
-                if (lamp.room && lamp.room.floor) {
-                    fields.building.value = lamp.room.floor.building_id;
-                    populateFloors(fields.building, fields.floor, lamp.room.floor_id);
+                if (lamp.floor) {
+                    fields.building.value = lamp.floor.building_id;
+                    populateFloors(fields.building, fields.floor, lamp.floor_id);
                 }
                 updateLampBadge(lamp);
             }
@@ -741,8 +717,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(res => res.json())
             .then(data => {
                 const floor = data.floor;
-                const rooms = data.rooms || [];
-                const lamps = rooms.flatMap(r => r.lamps || []);
+                const lamps = data.lamps || [];
 
                 if (floor && floor.floor_plan_image) {
                     fpPickerImage.src = floor.floor_plan_image;
@@ -773,7 +748,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     dot.style.width = '24px';
                     dot.style.height = '24px';
                     dot.style.transform = 'translate(-50%, -50%)';
-                    dot.title = `${lamp.code} - ${lamp.lamp_type ? lamp.lamp_type.name : 'Lampu'} (${lamp.room ? lamp.room.name : ''})`;
+                    dot.title = `${lamp.code} - ${lamp.lamp_type ? lamp.lamp_type.name : 'Lampu'}`;
                     dot.innerText = lamp.code ? lamp.code.replace('L-', '') : '';
 
                     dot.addEventListener('click', function (e) {
@@ -784,7 +759,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         dot.classList.add('ring-4', 'ring-teal-400', 'scale-125', 'z-30');
                         tempSelectedLampId = lamp.id;
                         btnConfirmFloorPlanPicker.disabled = false;
-                        fpPickerSelectedText.textContent = `Terpilih: ${lamp.code} (${lamp.lamp_type ? lamp.lamp_type.name : 'Lampu'}) - ${lamp.room ? lamp.room.name : ''}`;
+                        fpPickerSelectedText.textContent = `Terpilih: ${lamp.code} (${lamp.lamp_type ? lamp.lamp_type.name : 'Lampu'})`;
                     });
 
                     fpPickerDotsLayer.appendChild(dot);
@@ -793,7 +768,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (tempSelectedLampId) {
                     const sel = lamps.find(l => l.id == tempSelectedLampId);
                     if (sel) {
-                        fpPickerSelectedText.textContent = `Terpilih: ${sel.code} (${sel.lamp_type ? sel.lamp_type.name : 'Lampu'}) - ${sel.room ? sel.room.name : ''}`;
+                        fpPickerSelectedText.textContent = `Terpilih: ${sel.code} (${sel.lamp_type ? sel.lamp_type.name : 'Lampu'})`;
                     }
                 } else {
                     fpPickerSelectedText.textContent = 'Klik pada titik lampu di denah untuk memilih.';
@@ -815,11 +790,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!tempSelectedLampId) return;
 
         const chosenLamp = allLamps.find(l => l.id == tempSelectedLampId);
-        if (chosenLamp && chosenLamp.room && chosenLamp.room.floor) {
-            fields.building.value = chosenLamp.room.floor.building_id;
-            populateFloors(fields.building, fields.floor, chosenLamp.room.floor_id);
-            fields.room.value = chosenLamp.room_id;
-            updateLampsAndRoom(chosenLamp.room.floor_id, chosenLamp.id);
+        if (chosenLamp && chosenLamp.floor) {
+            fields.building.value = chosenLamp.floor.building_id;
+            populateFloors(fields.building, fields.floor, chosenLamp.floor_id);
+            updateLampsAndRoom(chosenLamp.floor_id, chosenLamp.id);
         }
         closeFloorPlanPicker();
     });
@@ -852,24 +826,22 @@ document.addEventListener('DOMContentLoaded', function () {
             method.disabled = false;
             method.value = 'PUT';
 
-            const roomId = this.dataset.roomId;
+            const floorId = this.dataset.floorId;
             const lampId = this.dataset.lampId;
 
             if (lampId) {
                 const lamp = allLamps.find(l => l.id == lampId);
-                if (lamp && lamp.room && lamp.room.floor) {
-                    fields.building.value = lamp.room.floor.building_id;
-                    populateFloors(fields.building, fields.floor, lamp.room.floor_id);
-                    fields.room.value = lamp.room_id;
-                    updateLampsAndRoom(lamp.room.floor_id, lamp.id);
+                if (lamp && lamp.floor) {
+                    fields.building.value = lamp.floor.building_id;
+                    populateFloors(fields.building, fields.floor, lamp.floor_id);
+                    updateLampsAndRoom(lamp.floor_id, lamp.id);
                 }
-            } else if (roomId) {
-                const room = allRooms.find(r => r.id == roomId);
-                if (room && room.floor) {
-                    fields.building.value = room.floor.building_id;
-                    populateFloors(fields.building, fields.floor, room.floor_id);
-                    fields.room.value = roomId;
-                    updateLampsAndRoom(room.floor_id, null);
+            } else if (floorId) {
+                const floor = allBuildings.flatMap(b => b.floors || []).find(f => f.id == floorId);
+                if (floor) {
+                    fields.building.value = floor.building_id;
+                    populateFloors(fields.building, fields.floor, floorId);
+                    updateLampsAndRoom(floorId, null);
                 }
             }
 

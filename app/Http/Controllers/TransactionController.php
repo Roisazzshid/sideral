@@ -7,7 +7,6 @@ use App\Models\Inventory;
 use App\Models\InventoryTransaction;
 use App\Models\Lamp;
 use App\Models\LampType;
-use App\Models\Room;
 use App\Models\Transaction as LampTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,22 +19,18 @@ class TransactionController extends Controller
         $tab = $request->query('tab', 'penggantian');
         $search = trim((string) $request->query('search', ''));
 
-        $transactions = LampTransaction::with(['room.floor.building', 'lampType', 'lamp'])
+        $transactions = LampTransaction::with(['floor.building', 'lampType', 'lamp'])
             ->when(in_array($tab, ['penggantian', 'pemasangan'], true), fn ($query) => $query->where('type', $tab))
             ->when($request->filled('date_from'), fn ($query) => $query->whereDate('transaction_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($query) => $query->whereDate('transaction_date', '<=', $request->date_to))
             ->when($request->filled('building_id'), function ($query) use ($request) {
-                $query->whereHas('room.floor', fn ($query) => $query->where('building_id', $request->building_id));
+                $query->whereHas('floor', fn ($query) => $query->where('building_id', $request->building_id));
             })
-            ->when($request->filled('floor_id'), function ($query) use ($request) {
-                $query->whereHas('room', fn ($query) => $query->where('floor_id', $request->floor_id));
-            })
-            ->when($request->filled('room_id'), fn ($query) => $query->where('room_id', $request->room_id))
+            ->when($request->filled('floor_id'), fn ($query) => $query->where('floor_id', $request->floor_id))
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('technician', 'like', "%{$search}%")
                         ->orWhere('notes', 'like', "%{$search}%")
-                        ->orWhereHas('room', fn ($query) => $query->where('name', 'like', "%{$search}%"))
                         ->orWhereHas('lampType', fn ($query) => $query->where('name', 'like', "%{$search}%")->orWhere('type', 'like', "%{$search}%"));
                 });
             })
@@ -47,11 +42,10 @@ class TransactionController extends Controller
             'title' => 'Transaksi',
             'tab' => $tab,
             'transactions' => $transactions,
-            'buildings' => Building::with('floors.rooms')->orderBy('name')->get(),
-            'rooms' => Room::with('floor.building')->orderBy('name')->get(),
+            'buildings' => Building::with('floors')->orderBy('name')->get(),
             'lampTypes' => LampType::with('inventory')->where('status', 'aktif')->orderBy('name')->get(),
-            'lamps' => Lamp::with('room.floor.building', 'lampType')->orderBy('code')->get(),
-            'filters' => $request->only(['date_from', 'date_to', 'building_id', 'floor_id', 'room_id', 'search']),
+            'lamps' => Lamp::with('floor.building', 'lampType')->orderBy('code')->get(),
+            'filters' => $request->only(['date_from', 'date_to', 'building_id', 'floor_id', 'search']),
         ]);
     }
 
@@ -106,7 +100,7 @@ class TransactionController extends Controller
     {
         return [
             'lamp_id' => ['nullable', 'integer', 'exists:lamps,id'],
-            'room_id' => ['required', 'integer', 'exists:rooms,id'],
+            'floor_id' => ['required', 'integer', 'exists:floors,id'],
             'lamp_type_id' => ['required', 'integer', 'exists:lamp_types,id'],
             'type' => ['required', 'in:penggantian,pemasangan'],
             'quantity' => ['required', 'integer', 'min:1'],

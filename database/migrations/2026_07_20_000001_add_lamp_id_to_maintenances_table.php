@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('maintenances', function (Blueprint $table) {
             if (!Schema::hasColumn('maintenances', 'lamp_id')) {
-                $table->foreignId('lamp_id')->nullable()->after('room_id')->constrained()->nullOnDelete();
+                $table->foreignId('lamp_id')->nullable()->after('floor_id')->constrained()->nullOnDelete();
             }
             if (!Schema::hasColumn('maintenances', 'work_start_time')) {
                 $table->string('work_start_time')->nullable()->after('resolution_notes');

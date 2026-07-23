@@ -53,8 +53,10 @@
                     <label class="mb-1 block text-xs font-semibold uppercase text-gray-500">Bentuk Model</label>
                     <select name="shape" class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
                         <option value="">Semua Bentuk</option>
-                        <option value="bulat" @selected($shapeFilter === 'bulat')>Bulat ⚪</option>
-                        <option value="panjang" @selected($shapeFilter === 'panjang')>Panjang ▬ (TL)</option>
+                        <option value="bulat" @selected($shapeFilter === 'bulat')>Bulet ⚪</option>
+                        <option value="segitiga" @selected($shapeFilter === 'segitiga')>Segitiga 🔺</option>
+                        <option value="garis" @selected($shapeFilter === 'garis')>Garis ▬</option>
+                        <option value="persegi_panjang" @selected($shapeFilter === 'persegi_panjang')>Persegi Panjang █</option>
                     </select>
                 </div>
                 <div class="flex items-end gap-2">
@@ -101,13 +103,21 @@
                                     @endif
                                 </td>
                                 <td class="px-5 py-4">
-                                    @if($type->shape === 'panjang')
+                                    @if($type->shape === 'segitiga')
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
+                                            <span class="h-2 w-2 rounded-full bg-amber-600"></span> Segitiga 🔺
+                                        </span>
+                                    @elseif($type->shape === 'garis')
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                                            <span class="h-1 w-3 rounded-xs bg-emerald-600"></span> Garis ▬
+                                        </span>
+                                    @elseif($type->shape === 'persegi_panjang')
                                         <span class="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700 ring-1 ring-purple-200">
-                                            <span class="h-2 w-3 rounded-xs bg-purple-600"></span> Panjang ▬ (TL)
+                                            <span class="h-2.5 w-3.5 rounded-xs bg-purple-600"></span> Persegi Panjang █
                                         </span>
                                     @else
                                         <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-200">
-                                            <span class="h-2 w-2 rounded-full bg-blue-600"></span> Bulat ⚪
+                                            <span class="h-2 w-2 rounded-full bg-blue-600"></span> Bulet ⚪
                                         </span>
                                     @endif
                                 </td>
@@ -192,8 +202,10 @@
                     <div>
                         <label for="ltShape" class="mb-1 block text-sm font-medium text-gray-700">Bentuk Model</label>
                         <select id="ltShape" name="shape" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
-                            <option value="bulat">Bulat ⚪ (Circular)</option>
-                            <option value="panjang">Panjang ▬ (TL / Tube / Batang)</option>
+                            <option value="bulat">Bulet ⚪</option>
+                            <option value="segitiga">Segitiga 🔺</option>
+                            <option value="garis">Garis ▬</option>
+                            <option value="persegi_panjang">Persegi Panjang █</option>
                         </select>
                     </div>
                 </div>

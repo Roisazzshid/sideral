@@ -117,7 +117,7 @@
                             $d = $mt->completed_date ?: ($mt->scheduled_date ?: $mt->created_at);
                             $dateStr = $d ? \Carbon\Carbon::parse($d)->format('d M Y') : '-';
                             $lampCode = $mt->lamp ? $mt->lamp->code : ($mt->lamp_id ? 'L-' . $mt->lamp_id : '-');
-                            $roomName = $mt->room ? $mt->room->name : '-';
+                            $floorName = $mt->floor ? $mt->floor->name : '-';
                         @endphp
                         <tr>
                             <td class="py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
@@ -125,7 +125,7 @@
                             </td>
                             <td class="py-3 font-medium text-gray-800 dark:text-gray-200">
                                 <div class="font-bold text-gray-900 dark:text-white">{{ $lampCode }}</div>
-                                <div class="text-[11px] text-gray-400 font-normal">{{ $roomName }}</div>
+                                <div class="text-[11px] text-gray-400 font-normal">{{ $floorName }}</div>
                             </td>
                             <td class="py-3">
                                 @if(strtolower($mt->type) === 'penggantian')

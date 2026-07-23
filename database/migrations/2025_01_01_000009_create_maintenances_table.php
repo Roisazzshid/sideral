@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('maintenances', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('room_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('floor_id')->constrained()->cascadeOnDelete();
             $table->string('type'); // Lampu Mati, Lampu Flicker, Pembersihan, dll
             $table->text('description')->nullable();
             $table->enum('priority', ['high', 'medium', 'low'])->default('medium');

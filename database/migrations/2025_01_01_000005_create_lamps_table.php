@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('lamps', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('room_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('floor_id')->constrained()->cascadeOnDelete();
             $table->foreignId('lamp_type_id')->constrained()->cascadeOnDelete();
             $table->string('code')->unique()->nullable(); // kode unik lampu, e.g. "L-001"
             $table->integer('position_x')->default(0); // posisi X pada denah

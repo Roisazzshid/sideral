@@ -17,9 +17,7 @@ class Building extends Model
     public function getTotalLampsAttribute(): int
     {
         return $this->floors->sum(function ($floor) {
-            return $floor->rooms->sum(function ($room) {
-                return $room->lamps->count();
-            });
+            return $floor->lamps->count();
         });
     }
 }

@@ -4,12 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Building;
 use App\Models\Floor;
-use App\Models\Room;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Rule;
 
 class MasterDataController extends Controller
 {
@@ -34,23 +33,20 @@ class MasterDataController extends Controller
             $tab = 'gedung';
         }
 
-        $buildings = Building::with('floors.rooms.lamps')->orderBy('name')->get();
+        $buildings = Building::with('floors.lamps')->orderBy('name')->get();
         
-        $floors = Floor::with(['building', 'rooms.lamps'])
+        $floors = Floor::with(['building', 'lamps'])
             ->join('buildings', 'floors.building_id', '=', 'buildings.id')
             ->orderBy('buildings.name')
             ->orderBy('floors.floor_number')
             ->select('floors.*')
             ->get();
 
-        $rooms = Room::with(['floor.building', 'lamps'])->orderBy('name')->get();
-
         return view('pages.sideral.master-data', [
             'title' => 'Master Data',
             'tab' => $tab,
             'buildings' => $buildings,
             'floors' => $floors,
-            'rooms' => $rooms,
         ]);
     }
 
@@ -121,40 +117,4 @@ class MasterDataController extends Controller
         $floor->delete();
         return redirect()->route('master-data', ['tab' => 'lantai'])->with('success', 'Lantai berhasil dihapus.');
     }
-
-    // ── Room CRUD ──────────────────────────────────────────────────────
-    public function storeRoom(Request $request)
-    {
-        $validated = $request->validate([
-            'floor_id' => ['required', 'integer', 'exists:floors,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'string', 'in:office,lobby,meeting_room,toilet,pantry,server_room,lounge,utility,storage,worship'],
-            'description' => ['nullable', 'string'],
-        ]);
-
-        Room::create($validated);
-
-        return redirect()->route('master-data', ['tab' => 'ruangan'])->with('success', 'Ruangan berhasil ditambahkan.');
-    }
-
-    public function updateRoom(Request $request, Room $room)
-    {
-        $validated = $request->validate([
-            'floor_id' => ['required', 'integer', 'exists:floors,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'string', 'in:office,lobby,meeting_room,toilet,pantry,server_room,lounge,utility,storage,worship'],
-            'description' => ['nullable', 'string'],
-        ]);
-
-        $room->update($validated);
-
-        return redirect()->route('master-data', ['tab' => 'ruangan'])->with('success', 'Ruangan berhasil diperbarui.');
-    }
-
-    public function destroyRoom(Room $room)
-    {
-        $room->delete();
-        return redirect()->route('master-data', ['tab' => 'ruangan'])->with('success', 'Ruangan berhasil dihapus.');
-    }
-
 }

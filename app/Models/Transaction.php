@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Transaction extends Model
 {
-    protected $fillable = ['lamp_id', 'room_id', 'lamp_type_id', 'type', 'quantity', 'transaction_date', 'technician', 'notes'];
+    protected $fillable = ['lamp_id', 'floor_id', 'lamp_type_id', 'type', 'quantity', 'transaction_date', 'technician', 'notes'];
 
     protected $casts = [
         'transaction_date' => 'date',
@@ -18,9 +18,9 @@ class Transaction extends Model
         return $this->belongsTo(Lamp::class);
     }
 
-    public function room(): BelongsTo
+    public function floor(): BelongsTo
     {
-        return $this->belongsTo(Room::class);
+        return $this->belongsTo(Floor::class);
     }
 
     public function lampType(): BelongsTo

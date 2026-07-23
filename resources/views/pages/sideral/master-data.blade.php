@@ -167,7 +167,7 @@
                                     <td class="px-5 py-4 font-semibold text-gray-800">{{ $f->building?->name ?? '-' }}</td>
                                     <td class="px-5 py-4 text-gray-700 font-medium">{{ $f->name }}</td>
                                     <td class="px-5 py-4 text-right text-gray-700">{{ $f->floor_number }}</td>
-                                    <td class="px-5 py-4 text-right font-bold text-teal-700">{{ $f->rooms->sum(fn($r) => $r->lamps->count()) }} Titik</td>
+                                    <td class="px-5 py-4 text-right font-bold text-teal-700">{{ $f->lamps->count() }} Titik</td>
                                     <td class="px-5 py-4">
                                         <div class="flex justify-end gap-2">
                                             <button

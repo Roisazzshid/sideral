@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('lamp_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('room_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('floor_id')->constrained()->cascadeOnDelete();
             $table->foreignId('lamp_type_id')->constrained()->cascadeOnDelete();
             $table->enum('type', ['penggantian', 'pemasangan'])->default('penggantian');
             $table->integer('quantity')->default(1);

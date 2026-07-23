@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Lamp;
 use App\Models\LampType;
 use App\Models\Maintenance;
-use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -63,7 +62,7 @@ class DashboardController extends Controller
         $statusData   = array_map(fn($s) => $statusCounts[$s] ?? 0, $statusLabels);
 
         // ── Tabel: Maintenance Terbaru ─────────────────────────────────────
-        $recentMaintenances = Maintenance::with(['room.floor.building', 'lamp.lampType'])
+        $recentMaintenances = Maintenance::with(['floor.building', 'lamp.lampType'])
             ->orderByDesc('id')
             ->limit(5)
             ->get();

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Maintenance extends Model
 {
     protected $fillable = [
-        'room_id', 'lamp_id', 'type', 'description', 'priority', 'status', 
+        'floor_id', 'lamp_id', 'type', 'description', 'priority', 'status', 
         'scheduled_date', 'completed_date', 'assigned_to', 'resolution_notes',
         'work_start_time', 'work_end_time'
     ];
@@ -18,9 +18,9 @@ class Maintenance extends Model
         'completed_date' => 'date',
     ];
 
-    public function room(): BelongsTo
+    public function floor(): BelongsTo
     {
-        return $this->belongsTo(Room::class);
+        return $this->belongsTo(Floor::class);
     }
 
     public function lamp(): BelongsTo

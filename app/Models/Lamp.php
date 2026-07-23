@@ -7,15 +7,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Lamp extends Model
 {
-    protected $fillable = ['room_id', 'lamp_type_id', 'code', 'position_x', 'position_y', 'rotation', 'width', 'height', 'status', 'installed_date', 'notes'];
+    protected $fillable = ['floor_id', 'lamp_type_id', 'code', 'position_x', 'position_y', 'rotation', 'width', 'height', 'status', 'installed_date', 'notes'];
 
     protected $casts = [
         'installed_date' => 'date',
     ];
 
-    public function room(): BelongsTo
+    public function floor(): BelongsTo
     {
-        return $this->belongsTo(Room::class);
+        return $this->belongsTo(Floor::class);
     }
 
     public function lampType(): BelongsTo

@@ -209,7 +209,7 @@
             Mode edit aktif. Drag titik untuk pindah, klik kanvas kosong untuk tambah titik.
         </div>
 
-        <div id="fpInner" class="absolute inset-0" style="transform-origin: top left; will-change: transform;">
+        <div id="fpInner" class="absolute inset-0" style="transform-origin: top left;">
             <div id="fpFloorLayer" class="absolute inset-0"></div>
             <div id="fpDotsLayer" class="absolute inset-0"></div>
         </div>
@@ -458,9 +458,14 @@
 
         <!-- Footer Actions -->
         <div class="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-5 py-3">
-            <button id="modalBtnDeleteLamp" type="button" class="rounded-lg bg-red-50 border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100">
-                Hapus Titik Lampu
-            </button>
+            <div class="flex gap-2">
+                <button id="modalBtnDeleteLamp" type="button" class="rounded-lg bg-red-50 border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100">
+                    Hapus Titik Lampu
+                </button>
+                <button id="modalBtnRotateLamp" type="button" class="hidden rounded-lg bg-teal-50 border border-teal-200 px-3 py-1.5 text-xs font-semibold text-teal-700 hover:bg-teal-100">
+                    Rotate ↻
+                </button>
+            </div>
             <button id="modalBtnCloseFooter" type="button" class="rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50">
                 Tutup
             </button>
@@ -480,7 +485,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const state = {
         floorId: {{ $selectedFloor ? $selectedFloor->id : 'null' }},
-        rooms: [],
         lamps: [],
         counts: { on: 0, off: 0, warning: 0, rusak: 0 },
         floorImage: @json($selectedFloorImage),
@@ -574,13 +578,15 @@ document.addEventListener('DOMContentLoaded', function () {
         'bulb': 'donut',
     };
 
-    // Default shape adalah circle jika tipe tidak dikenali
     function getLampShape(lampType) {
         if (!lampType) return 'circle';
-        if (lampType.shape === 'panjang') return 'rectangle';
+        const typeLower = lampType.type?.toLowerCase() || '';
+        if (lampTypeShapeMap[typeLower]) return lampTypeShapeMap[typeLower];
+        if (typeLower.includes('tl') || typeLower.includes('t5')) return 'rectangle';
+        if (lampType.shape === 'garis' || lampType.shape === 'persegi_panjang' || lampType.shape === 'panjang') return 'rectangle';
+        if (lampType.shape === 'segitiga') return 'triangle';
         if (lampType.shape === 'bulat') return 'circle';
-        if (lampType.type && lampType.type.toLowerCase().includes('tl')) return 'rectangle';
-        return lampTypeShapeMap[lampType.type?.toLowerCase()] || 'circle';
+        return 'circle';
     }
 
     // Fungsi untuk membuat elemen SVG berdasarkan bentuk
@@ -874,7 +880,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Tampilkan kontrol rotasi untuk lampu model panjang / TL
         const rotationControl = $('ttRotationControl');
         const shape = getLampShape(lamp.lamp_type);
-        const isRotatable = shape === 'rectangle' || shape === 'triangle' || (lamp.lamp_type && lamp.lamp_type.shape === 'panjang');
+        const isRotatable = shape === 'rectangle' || shape === 'triangle' || (lamp.lamp_type && ['panjang', 'garis', 'persegi_panjang'].includes(lamp.lamp_type.shape));
         if (isRotatable) {
             rotationControl.classList.remove('hidden');
             $('ttRotation').value = lamp.rotation || 0;
@@ -912,8 +918,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!res.ok) throw new Error('Gagal memuat data lantai.');
 
         const data = await res.json();
-        state.rooms = data.rooms || [];
-        state.lamps = state.rooms.flatMap((room) => room.lamps || []);
+        state.lamps = data.lamps || [];
         state.counts = Object.assign({ on: 0, off: 0, warning: 0, rusak: 0 }, data.lamp_counts || {});
         updateStats();
         setFloorImage(data.floor?.floor_plan_image || '');
@@ -1700,6 +1705,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const modal = $('lampDetailModal');
         if (!modal) return;
 
+        // Toggle rotate button visibility: only show for long rectangle lamps
+        const shape = getLampShape(lamp.lamp_type);
+        if ($('modalBtnRotateLamp')) {
+            if (shape === 'rectangle') {
+                $('modalBtnRotateLamp').classList.remove('hidden');
+            } else {
+                $('modalBtnRotateLamp').classList.add('hidden');
+            }
+        }
+
         if ($('modalLampCode')) $('modalLampCode').textContent = lamp.code || 'Lampu';
         if ($('modalLampTypeName')) $('modalLampTypeName').textContent = lamp.lamp_type?.name || 'Tipe Lampu Tidak Diketahui';
         if ($('modalLampStatusText')) $('modalLampStatusText').textContent = labelMap[lamp.status] || lamp.status;
@@ -1766,6 +1781,44 @@ document.addEventListener('DOMContentLoaded', function () {
             if (confirm(`Apakah Anda yakin ingin menghapus titik lampu ${state.selectedLamp.code}?`)) {
                 await deleteLamp(state.selectedLamp.id);
                 closeLampDetailModal();
+            }
+        });
+    }
+
+    if ($('modalBtnRotateLamp')) {
+        $('modalBtnRotateLamp').addEventListener('click', async function () {
+            if (!state.selectedLamp) return;
+            const curRotation = state.selectedLamp.rotation || 0;
+            const newRotation = (curRotation + 90) % 360;
+
+            this.disabled = true;
+            this.textContent = 'Memutar...';
+
+            try {
+                const res = await fetch('/floor-plan/lamp/' + state.selectedLamp.id + '/rotation', {
+                    method: 'PUT',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': CSRF,
+                    },
+                    body: JSON.stringify({
+                        rotation: newRotation,
+                    }),
+                });
+
+                if (res.ok) {
+                    state.selectedLamp.rotation = newRotation;
+                    renderDots();
+                } else {
+                    alert('Gagal memutar titik lampu.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Gagal memutar titik lampu.');
+            } finally {
+                this.disabled = false;
+                this.textContent = 'Rotate ↻';
             }
         });
     }

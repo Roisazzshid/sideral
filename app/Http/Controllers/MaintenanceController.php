@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Building;
-use App\Models\Room;
 use App\Models\Maintenance;
 use App\Models\Lamp;
 use App\Models\Inventory;
@@ -18,7 +17,7 @@ class MaintenanceController extends Controller
     {
         try {
             if (!\Illuminate\Support\Facades\Schema::hasColumn('maintenances', 'lamp_id')) {
-                \Illuminate\Support\Facades\DB::statement("ALTER TABLE `maintenances` ADD COLUMN `lamp_id` BIGINT UNSIGNED NULL AFTER `room_id`");
+                \Illuminate\Support\Facades\DB::statement("ALTER TABLE `maintenances` ADD COLUMN `lamp_id` BIGINT UNSIGNED NULL AFTER `floor_id`");
             }
             if (!\Illuminate\Support\Facades\Schema::hasColumn('maintenances', 'work_start_time')) {
                 \Illuminate\Support\Facades\DB::statement("ALTER TABLE `maintenances` ADD COLUMN `work_start_time` VARCHAR(255) NULL");
@@ -40,15 +39,14 @@ class MaintenanceController extends Controller
         $status = $request->query('status');
         $priority = $request->query('priority');
 
-        $maintenancesQuery = Maintenance::with(['room.floor.building', 'lamp.lampType'])
+        $maintenancesQuery = Maintenance::with(['floor.building', 'lamp.lampType'])
             ->when($status, fn ($query) => $query->where('status', $status))
             ->when($priority, fn ($query) => $query->where('priority', $priority))
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('type', 'like', "%{$search}%")
                       ->orWhere('description', 'like', "%{$search}%")
-                      ->orWhere('assigned_to', 'like', "%{$search}%")
-                      ->orWhereHas('room', fn ($rQuery) => $rQuery->where('name', 'like', "%{$search}%"));
+                      ->orWhere('assigned_to', 'like', "%{$search}%");
                 });
             });
 
@@ -94,9 +92,8 @@ class MaintenanceController extends Controller
             'groupedJadwal' => $groupedJadwal,
             'buildings' => Building::with(['floors' => function ($q) {
                 $q->orderBy('floor_number')->orderBy('name');
-            }, 'floors.rooms.lamps.lampType'])->orderBy('name')->get(),
-            'rooms' => Room::with('floor.building')->orderBy('name')->get(),
-            'lamps' => \App\Models\Lamp::with(['room.floor.building', 'lampType'])->orderBy('code')->get(),
+            }, 'floors.lamps.lampType'])->orderBy('name')->get(),
+            'lamps' => \App\Models\Lamp::with(['floor.building', 'lampType'])->orderBy('code')->get(),
             'filters' => $request->only(['status', 'priority', 'search']),
         ]);
     }
@@ -125,7 +122,7 @@ class MaintenanceController extends Controller
         $this->ensureColumnsExist();
 
         $validated = $request->validate([
-            'room_id' => ['required', 'integer', 'exists:rooms,id'],
+            'floor_id' => ['required', 'integer', 'exists:floors,id'],
             'lamp_id' => ['nullable', 'integer', 'exists:lamps,id'],
             'type' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -153,7 +150,7 @@ class MaintenanceController extends Controller
         $this->ensureColumnsExist();
 
         $validated = $request->validate([
-            'room_id' => ['required', 'integer', 'exists:rooms,id'],
+            'floor_id' => ['required', 'integer', 'exists:floors,id'],
             'lamp_id' => ['nullable', 'integer', 'exists:lamps,id'],
             'type' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -241,7 +238,7 @@ class MaintenanceController extends Controller
                 // Create transaction replacement log for report tab
                 Transaction::create([
                     'lamp_id'          => $lamp->id,
-                    'room_id'          => $maintenance->room_id,
+                    'floor_id'         => $maintenance->floor_id,
                     'lamp_type_id'     => $lamp->lamp_type_id,
                     'type'             => 'penggantian',
                     'quantity'         => 1,

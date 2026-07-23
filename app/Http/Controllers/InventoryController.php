@@ -44,7 +44,9 @@ class InventoryController extends Controller
 
         $totalTypes = $lampTypes->count();
         $countBulat = $lampTypes->where('shape', 'bulat')->count();
-        $countPanjang = $lampTypes->where('shape', 'panjang')->count();
+        $countSegitiga = $lampTypes->where('shape', 'segitiga')->count();
+        $countGaris = $lampTypes->where('shape', 'garis')->count();
+        $countPersegiPanjang = $lampTypes->where('shape', 'persegi_panjang')->count();
         $countAktif = $lampTypes->where('status', 'aktif')->count();
 
         return view('pages.sideral.inventory', [
@@ -55,7 +57,9 @@ class InventoryController extends Controller
             'statusFilter' => $statusFilter,
             'totalTypes' => $totalTypes,
             'countBulat' => $countBulat,
-            'countPanjang' => $countPanjang,
+            'countSegitiga' => $countSegitiga,
+            'countGaris' => $countGaris,
+            'countPersegiPanjang' => $countPersegiPanjang,
             'countAktif' => $countAktif,
         ]);
     }
@@ -67,7 +71,7 @@ class InventoryController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'string', 'max:255'],
-            'shape' => ['required', 'in:bulat,panjang'],
+            'shape' => ['required', 'in:bulat,segitiga,garis,persegi_panjang'],
             'watt' => ['nullable', 'integer', 'min:0'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],
@@ -93,7 +97,7 @@ class InventoryController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'string', 'max:255'],
-            'shape' => ['required', 'in:bulat,panjang'],
+            'shape' => ['required', 'in:bulat,segitiga,garis,persegi_panjang'],
             'watt' => ['nullable', 'integer', 'min:0'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],

@@ -109,12 +109,12 @@ class ReportController extends Controller
     private function calculateUsageReport($year, $month, $buildingId)
     {
         // Fetch transactions (penggantian & pemasangan)
-        $txQuery = Transaction::with(['lampType', 'room.floor.building', 'lamp'])
+        $txQuery = Transaction::with(['lampType', 'floor.building', 'lamp'])
             ->whereYear('transaction_date', $year)
             ->whereMonth('transaction_date', $month);
 
         if ($buildingId) {
-            $txQuery->whereHas('room.floor', fn($q) => $q->where('building_id', $buildingId));
+            $txQuery->whereHas('floor', fn($q) => $q->where('building_id', $buildingId));
         }
 
         $transactions = $txQuery->orderBy('transaction_date', 'desc')->get();
@@ -136,12 +136,20 @@ class ReportController extends Controller
             }
 
             $typeName = $tx->lampType?->name ?? 'Lampu';
-            $shape = ($tx->lampType?->shape === 'panjang') ? 'Panjang ▬' : 'Bulat ⚪';
+            $shapeVal = $tx->lampType?->shape ?? 'bulat';
+            $shape = 'Bulet ⚪';
+            if ($shapeVal === 'segitiga') {
+                $shape = 'Segitiga 🔺';
+            } elseif ($shapeVal === 'garis') {
+                $shape = 'Garis ▬';
+            } elseif ($shapeVal === 'persegi_panjang') {
+                $shape = 'Persegi Panjang █';
+            }
             
             $lampTypeCounts[$typeName] = ($lampTypeCounts[$typeName] ?? 0) + $qty;
 
-            $buildingName = $tx->room?->floor?->building?->name ?? '-';
-            $floorName = $tx->room?->floor?->name ?? '-';
+            $buildingName = $tx->floor?->building?->name ?? '-';
+            $floorName = $tx->floor?->name ?? '-';
             $location = $buildingName . ' / ' . $floorName;
 
             $list[] = [

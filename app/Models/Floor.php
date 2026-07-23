@@ -15,8 +15,8 @@ class Floor extends Model
         return $this->belongsTo(Building::class);
     }
 
-    public function rooms(): HasMany
+    public function lamps(): HasMany
     {
-        return $this->hasMany(Room::class);
+        return $this->hasMany(Lamp::class);
     }
 }

@@ -118,93 +118,81 @@ class FloorPlanController extends Controller
                 return response()->json(['error' => 'Floor not found'], 404);
             }
 
-            $rooms = $floor->rooms()->with(['lamps' => function ($q) {
-                $q->with(['lampType', 'transactions', 'maintenances']);
-            }])->get()->map(function ($room) {
-                return [
-                    'id'          => $room->id,
-                    'name'        => $room->name,
-                    'type'        => $room->type,
-                    'description' => $room->description,
-                    'lamps'       => $room->lamps->map(function ($lamp) use ($room) {
-                        $historyList = [];
+            $lamps = $floor->lamps()->with(['lampType', 'transactions', 'maintenances'])->get()->map(function ($lamp) use ($floor) {
+                $historyList = [];
 
-                        if ($lamp->maintenances) {
-                            foreach ($lamp->maintenances as $mt) {
-                                try {
-                                    $d = $mt->completed_date ?: $mt->scheduled_date ?: $mt->created_at;
-                                    $dateStr = $d ? \Carbon\Carbon::parse($d)->format('d/m/Y') : '-';
-                                    $ts = $d ? \Carbon\Carbon::parse($d)->timestamp : 0;
-                                } catch (\Throwable $e) {
-                                    $dateStr = '-';
-                                    $ts = 0;
-                                }
-
-                                $historyList[] = [
-                                    'date'       => $dateStr,
-                                    'technician' => $mt->assigned_to ?: 'Teknisi',
-                                    'notes'      => ($mt->type ? '[' . $mt->type . '] ' : '') . ($mt->resolution_notes ?: $mt->description ?: 'Pemeliharaan'),
-                                    'ts'         => $ts,
-                                ];
-                            }
+                if ($lamp->maintenances) {
+                    foreach ($lamp->maintenances as $mt) {
+                        try {
+                            $d = $mt->completed_date ?: $mt->scheduled_date ?: $mt->created_at;
+                            $dateStr = $d ? \Carbon\Carbon::parse($d)->format('d/m/Y') : '-';
+                            $ts = $d ? \Carbon\Carbon::parse($d)->timestamp : 0;
+                        } catch (\Throwable $e) {
+                            $dateStr = '-';
+                            $ts = 0;
                         }
 
-                        if ($lamp->transactions) {
-                            foreach ($lamp->transactions as $tx) {
-                                try {
-                                    $d = $tx->transaction_date ?: $tx->created_at;
-                                    $dateStr = $d ? \Carbon\Carbon::parse($d)->format('d/m/Y') : '-';
-                                    $ts = $d ? \Carbon\Carbon::parse($d)->timestamp : 0;
-                                } catch (\Throwable $e) {
-                                    $dateStr = '-';
-                                    $ts = 0;
-                                }
-
-                                $historyList[] = [
-                                    'date'       => $dateStr,
-                                    'technician' => $tx->technician ?: 'Teknisi',
-                                    'notes'      => $tx->notes ?: 'Penggantian Lampu',
-                                    'ts'         => $ts,
-                                ];
-                            }
-                        }
-
-                        usort($historyList, fn($a, $b) => $b['ts'] <=> $a['ts']);
-
-                        return [
-                            'id'         => $lamp->id,
-                            'code'       => $lamp->code,
-                            'position_x' => $lamp->position_x,
-                            'position_y' => $lamp->position_y,
-                            'rotation'   => $lamp->rotation ?? 0,
-                            'width'      => $lamp->width ?? 32,
-                            'height'     => $lamp->height ?? 14,
-                            'status'     => $lamp->status ?? 'off',
-                            'room'       => [
-                                'id'   => $room->id,
-                                'name' => $room->name,
-                                'type' => $room->type,
-                            ],
-                            'lamp_type'  => $lamp->lampType ? [
-                                'id'    => $lamp->lampType->id,
-                                'name'  => $lamp->lampType->name,
-                                'type'  => $lamp->lampType->type,
-                                'shape' => $lamp->lampType->shape ?? 'bulat',
-                                'watt'  => $lamp->lampType->watt,
-                            ] : null,
-                            'history'    => array_slice($historyList, 0, 10),
+                        $historyList[] = [
+                            'date'       => $dateStr,
+                            'technician' => $mt->assigned_to ?: 'Teknisi',
+                            'notes'      => ($mt->type ? '[' . $mt->type . '] ' : '') . ($mt->resolution_notes ?: $mt->description ?: 'Pemeliharaan'),
+                            'ts'         => $ts,
                         ];
-                    }),
+                    }
+                }
+
+                if ($lamp->transactions) {
+                    foreach ($lamp->transactions as $tx) {
+                        try {
+                            $d = $tx->transaction_date ?: $tx->created_at;
+                            $dateStr = $d ? \Carbon\Carbon::parse($d)->format('d/m/Y') : '-';
+                            $ts = $d ? \Carbon\Carbon::parse($d)->timestamp : 0;
+                        } catch (\Throwable $e) {
+                            $dateStr = '-';
+                            $ts = 0;
+                        }
+
+                        $historyList[] = [
+                            'date'       => $dateStr,
+                            'technician' => $tx->technician ?: 'Teknisi',
+                            'notes'      => $tx->notes ?: 'Penggantian Lampu',
+                            'ts'         => $ts,
+                        ];
+                    }
+                }
+
+                usort($historyList, fn($a, $b) => $b['ts'] <=> $a['ts']);
+
+                return [
+                    'id'         => $lamp->id,
+                    'code'       => $lamp->code,
+                    'position_x' => $lamp->position_x,
+                    'position_y' => $lamp->position_y,
+                    'rotation'   => $lamp->rotation ?? 0,
+                    'width'      => $lamp->width ?? 32,
+                    'height'     => $lamp->height ?? 14,
+                    'status'     => $lamp->status ?? 'off',
+                    'floor'      => [
+                        'id'   => $floor->id,
+                        'name' => $floor->name,
+                    ],
+                    'lamp_type'  => $lamp->lampType ? [
+                        'id'    => $lamp->lampType->id,
+                        'name'  => $lamp->lampType->name,
+                        'type'  => $lamp->lampType->type,
+                        'shape' => $lamp->lampType->shape ?? 'bulat',
+                        'watt'  => $lamp->lampType->watt,
+                    ] : null,
+                    'history'    => array_slice($historyList, 0, 10),
                 ];
             });
 
             // Hitung semua lampu di lantai ini
-            $allLamps = $rooms->flatMap(fn($room) => $room['lamps']);
             $lampCounts = [
-                'on'      => $allLamps->where('status', 'on')->count(),
-                'off'     => $allLamps->where('status', 'off')->count(),
-                'rusak'   => $allLamps->where('status', 'rusak')->count(),
-                'warning' => $allLamps->where('status', 'warning')->count(),
+                'on'      => $lamps->where('status', 'on')->count(),
+                'off'     => $lamps->where('status', 'off')->count(),
+                'rusak'   => $lamps->where('status', 'rusak')->count(),
+                'warning' => $lamps->where('status', 'warning')->count(),
             ];
 
             $floorImage = '';
@@ -219,7 +207,7 @@ class FloorPlanController extends Controller
                     'floor_number'     => $floor->floor_number,
                     'floor_plan_image' => $floorImage,
                 ],
-                'rooms'       => $rooms,
+                'lamps'       => $lamps,
                 'lamp_counts' => $lampCounts,
             ]);
         } catch (\Throwable $e) {
@@ -241,35 +229,22 @@ class FloorPlanController extends Controller
             'lamp_type_id'  => 'required|integer|exists:lamp_types,id',
             'position_x'    => 'required|numeric|min:0|max:100',
             'position_y'    => 'required|numeric|min:0|max:100',
-            'room_id'       => 'nullable|integer|exists:rooms,id',
         ]);
-
-        // Cari room: gunakan room_id jika ada, jika tidak pakai room pertama di floor tersebut
-        if (!empty($validated['room_id'])) {
-            $roomId = $validated['room_id'];
-        } else {
-            $floor = Floor::findOrFail($validated['floor_id']);
-            $room = $floor->rooms()->first();
-            if (!$room) {
-                return response()->json(['error' => 'Tidak ada ruangan di lantai ini.'], 422);
-            }
-            $roomId = $room->id;
-        }
 
         // Generate kode unik
         $nextId = (Lamp::max('id') ?? 0) + 1;
         $code = 'L-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
 
         $lamp = Lamp::create([
-            'room_id'      => $roomId,
+            'floor_id'     => $validated['floor_id'],
             'lamp_type_id' => $validated['lamp_type_id'],
             'code'         => $code,
             'position_x'   => $validated['position_x'],
             'position_y'   => $validated['position_y'],
-            'status'       => 'off',
+            'status'       => 'on',
         ]);
 
-        $lamp->load(['lampType', 'room']);
+        $lamp->load(['lampType', 'floor']);
 
         return response()->json([
             'id'         => $lamp->id,
@@ -280,10 +255,9 @@ class FloorPlanController extends Controller
             'width'      => $lamp->width ?? 32,
             'height'     => $lamp->height ?? 14,
             'status'     => $lamp->status,
-            'room'       => [
-                'id'   => $lamp->room->id,
-                'name' => $lamp->room->name,
-                'type' => $lamp->room->type,
+            'floor'      => [
+                'id'   => $lamp->floor->id,
+                'name' => $lamp->floor->name,
             ],
             'lamp_type'  => $lamp->lampType ? [
                 'id'    => $lamp->lampType->id,

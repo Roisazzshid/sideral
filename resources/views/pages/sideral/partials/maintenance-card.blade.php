@@ -14,11 +14,11 @@
             @endif
         </div>
 
-        <!-- Room Information -->
+        <!-- Floor Information -->
         <div>
-            <div class="text-xs text-gray-400 font-medium">Area / Ruangan</div>
-            <div class="text-sm font-bold text-gray-800">{{ $item->room?->name ?? '-' }}</div>
-            <div class="text-xs text-gray-500 font-medium">{{ $item->room?->floor?->building?->name ?? '-' }} / {{ $item->room?->floor?->name ?? '-' }}</div>
+            <div class="text-xs text-gray-400 font-medium">Gedung / Lantai</div>
+            <div class="text-sm font-bold text-gray-800">{{ $item->floor?->name ?? '-' }}</div>
+            <div class="text-xs text-gray-500 font-medium">{{ $item->floor?->building?->name ?? '-' }}</div>
             @if($item->lamp)
                 <div class="mt-1">
                     <span class="inline-flex items-center rounded-md bg-teal-50 px-2 py-0.5 text-xs font-semibold text-teal-700 ring-1 ring-inset ring-teal-600/10">
@@ -62,7 +62,7 @@
             type="button"
             class="btn-edit-maintenance text-xs font-semibold text-teal-600 hover:text-teal-800 hover:underline"
             data-action="{{ route('maintenance.update', $item) }}"
-            data-room-id="{{ $item->room_id }}"
+            data-floor-id="{{ $item->floor_id }}"
             data-lamp-id="{{ $item->lamp_id }}"
             data-type="{{ $item->type }}"
             data-description="{{ $item->description }}"

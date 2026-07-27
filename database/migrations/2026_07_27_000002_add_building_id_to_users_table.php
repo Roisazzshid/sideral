@@ -17,6 +17,11 @@ return new class extends Migration
                 $table->foreign('building_id')->references('id')->on('buildings')->onDelete('set null');
             });
         }
+        if (Schema::hasTable('users') && !Schema::hasColumn('users', 'plain_password')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('plain_password')->nullable()->after('password');
+            });
+        }
     }
 
     /**
@@ -28,6 +33,11 @@ return new class extends Migration
             Schema::table('users', function (Blueprint $table) {
                 $table->dropForeign(['building_id']);
                 $table->dropColumn('building_id');
+            });
+        }
+        if (Schema::hasTable('users') && Schema::hasColumn('users', 'plain_password')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropColumn('plain_password');
             });
         }
     }

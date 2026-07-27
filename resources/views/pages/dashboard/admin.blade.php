@@ -143,7 +143,7 @@
                                 @endif
                             </td>
                             <td class="py-3 text-right">
-                                <div class="font-semibold text-gray-800 dark:text-gray-200">{{ $mt->assigned_to ?: 'Teknisi' }}</div>
+                                <div class="font-semibold text-gray-800 dark:text-gray-200">{{ $mt->technician?->name ?: 'Teknisi' }}</div>
                                 <div class="text-[10px] text-gray-400 capitalize">{{ $mt->status }}</div>
                             </td>
                         </tr>

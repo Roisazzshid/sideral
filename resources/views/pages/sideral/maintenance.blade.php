@@ -35,6 +35,7 @@
                 <p class="mt-1 text-sm text-gray-500">Sistem tiket pengerjaan, pembersihan, dan jadwal pemeliharaan fasilitas lampu.</p>
             </div>
 
+            @if(auth()->user()->role === 'admin')
             <button id="btnOpenMaintenanceModal" type="button" class="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 5v14"></path>
@@ -42,6 +43,7 @@
                 </svg>
                 Buat Maintenance
             </button>
+            @endif
         </div>
 
         <!-- Tabs Navigation -->
@@ -149,7 +151,7 @@
                                             <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">Baru (Pending)</span>
                                         @endif
                                     </td>
-                                    <td class="px-5 py-4 text-gray-700">{{ $mt->assigned_to ?: '-' }}</td>
+                                    <td class="px-5 py-4 text-gray-700">{{ $mt->technician?->name ?: '-' }}</td>
                                     <td class="px-5 py-4">
                                         <div class="flex justify-end gap-1.5">
                                             @if($mt->status === 'pending')
@@ -166,7 +168,7 @@
                                                     data-priority="{{ $mt->priority }}"
                                                     data-status="{{ $mt->status }}"
                                                     data-scheduled-date="{{ $mt->scheduled_date?->toDateString() }}"
-                                                    data-assigned-to="{{ $mt->assigned_to }}"
+                                                    data-assigned-to-id="{{ $mt->assigned_to_id }}"
                                                 >
                                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                         <path d="M12 20h9"></path>
@@ -180,7 +182,7 @@
                                                     title="Proses Pengerjaan"
                                                     data-action="{{ route('maintenance.work', $mt) }}"
                                                     data-work-date="{{ now()->toDateString() }}"
-                                                    data-assigned-to="{{ $mt->assigned_to }}"
+                                                    data-assigned-to-id="{{ $mt->assigned_to_id }}"
                                                 >
                                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
@@ -196,7 +198,7 @@
                                                     data-completed-date="{{ $mt->completed_date?->toDateString() ?: now()->toDateString() }}"
                                                     data-work-start-time="{{ $mt->work_start_time }}"
                                                     data-work-end-time="{{ $mt->work_end_time }}"
-                                                    data-assigned-to="{{ $mt->assigned_to }}"
+                                                    data-assigned-to-id="{{ $mt->assigned_to_id }}"
                                                     data-resolution-notes="{{ $mt->resolution_notes }}"
                                                 >
                                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -205,6 +207,7 @@
                                                     </svg>
                                                 </button>
 
+                                                @if(auth()->user()->role === 'admin')
                                                 <form method="POST" action="{{ route('maintenance.approve', $mt) }}" class="inline" onsubmit="return confirm('Setujui pengerjaan ini? Status titik lampu akan otomatis kembali Aktif.');">
                                                     @csrf
                                                     <button type="submit" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-green-200 bg-green-50 text-green-700 hover:bg-green-100" title="Approve Pekerjaan">
@@ -225,6 +228,7 @@
                                                         </svg>
                                                     </button>
                                                 </form>
+                                                @endif
                                             @else
                                                 <!-- State 3: Completed/Approved - No Actions -->
                                                 <span class="text-xs text-gray-400 italic">Terverifikasi</span>
@@ -388,10 +392,7 @@
                             <option value="Lainnya">Lainnya</option>
                         </select>
                     </div>
-                    <div class="md:col-span-2">
-                        <label for="mtDescription" class="mb-1 block text-sm font-medium text-gray-700">Deskripsi Masalah</label>
-                        <textarea id="mtDescription" name="description" rows="3" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100" placeholder="Jelaskan detail permasalahan..."></textarea>
-                    </div>
+
                     <div>
                         <label for="mtPriority" class="mb-1 block text-sm font-medium text-gray-700">Prioritas</label>
                         <select id="mtPriority" name="priority" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
@@ -406,7 +407,12 @@
                     </div>
                     <div class="md:col-span-2">
                         <label for="mtAssignedTo" class="mb-1 block text-sm font-medium text-gray-700">User / Teknisi yang Ditunjuk (Opsional)</label>
-                        <input id="mtAssignedTo" name="assigned_to" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100" placeholder="Ahmad / Budi">
+                        <select id="mtAssignedTo" name="assigned_to_id" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
+                            <option value="">Pilih Teknisi</option>
+                            @foreach($technicians as $tech)
+                                <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
 
@@ -444,7 +450,12 @@
                 </div>
                 <div>
                     <label for="workAssignedTo" class="mb-1 block text-sm font-medium text-gray-700">Siapa yang Mengerjakan</label>
-                    <input id="workAssignedTo" name="assigned_to" type="text" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100" placeholder="Nama teknisi">
+                    <select id="workAssignedTo" name="assigned_to_id" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
+                        <option value="">Pilih Teknisi</option>
+                        @foreach($technicians as $tech)
+                            <option value="{{ $tech->id }}" @selected(auth()->user()->role === 'teknisi' && auth()->id() == $tech->id)>{{ $tech->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div>
                     <label for="workResolutionNotes" class="mb-1 block text-sm font-medium text-gray-700">Keterangan (Opsional)</label>
@@ -540,7 +551,6 @@ document.addEventListener('DOMContentLoaded', function () {
         floor: document.getElementById('mtFloor'),
         lamp: document.getElementById('mtLamp'),
         type: document.getElementById('mtType'),
-        description: document.getElementById('mtDescription'),
         priority: document.getElementById('mtPriority'),
         scheduledDate: document.getElementById('mtScheduledDate'),
         assignedTo: document.getElementById('mtAssignedTo'),
@@ -849,11 +859,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             fields.type.value = this.dataset.type || 'Lampu Mati';
-            fields.description.value = this.dataset.description || '';
             fields.priority.value = this.dataset.priority || 'medium';
             if (fields.status) fields.status.value = this.dataset.status || 'pending';
             fields.scheduledDate.value = this.dataset.scheduledDate || new Date().toISOString().split('T')[0];
-            fields.assignedTo.value = this.dataset.assignedTo || '';
+            fields.assignedTo.value = this.dataset.assignedToId || '';
 
             openModal();
         });
@@ -895,7 +904,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             workForm.reset();
             workFields.date.value = new Date().toISOString().split('T')[0];
-            workFields.assignedTo.value = this.dataset.assignedTo || '';
+            workFields.assignedTo.value = this.dataset.assignedToId || '';
 
             const now = new Date();
             const startHour = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
@@ -917,7 +926,7 @@ document.addEventListener('DOMContentLoaded', function () {
             workFields.date.value = this.dataset.completedDate || new Date().toISOString().split('T')[0];
             workFields.startTime.value = this.dataset.workStartTime || '';
             workFields.endTime.value = this.dataset.workEndTime || '';
-            workFields.assignedTo.value = this.dataset.assignedTo || '';
+            workFields.assignedTo.value = this.dataset.assignedToId || '';
             workFields.notes.value = this.dataset.resolutionNotes || '';
 
             openWorkModal();

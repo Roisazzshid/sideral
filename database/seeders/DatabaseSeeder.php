@@ -23,11 +23,21 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Teknisi User
+        // Budi User (Teknisi)
         User::updateOrCreate(
-            ['email' => 'teknisi@sideral.com'],
+            ['email' => 'budi@sideral.com'],
             [
-                'name'     => 'Teknisi SIDERAL',
+                'name'     => 'Budi',
+                'password' => Hash::make('password'),
+                'role'     => 'teknisi',
+            ]
+        );
+
+        // Candra User (Teknisi)
+        User::updateOrCreate(
+            ['email' => 'candra@sideral.com'],
+            [
+                'name'     => 'Candra',
                 'password' => Hash::make('password'),
                 'role'     => 'teknisi',
             ]

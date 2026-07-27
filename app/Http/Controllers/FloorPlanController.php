@@ -118,18 +118,35 @@ class FloorPlanController extends Controller
                 return response()->json(['error' => 'Floor not found'], 404);
             }
 
-            $lamps = $floor->lamps()->with(['lampType', 'maintenances'])->get()->map(function ($lamp) use ($floor) {
+            $lamps = $floor->lamps()->with(['lampType', 'maintenances.technician'])->get()->map(function ($lamp) use ($floor) {
                 $historyList = [];
 
                 if ($lamp->maintenances) {
-                    foreach ($lamp->maintenances as $mt) {
+                    $sortedMts = $lamp->maintenances->sortBy(function ($mt) {
+                        return $mt->completed_date ? \Carbon\Carbon::parse($mt->completed_date)->timestamp : (\Carbon\Carbon::parse($mt->created_at)->timestamp ?? 0);
+                    })->values();
+
+                    $lastCompletedDate = null;
+
+                    foreach ($sortedMts as $mt) {
                         try {
                             $tglMati = $mt->created_at ? \Carbon\Carbon::parse($mt->created_at)->format('d/m/Y') : '-';
                             $tglDiganti = $mt->completed_date ? \Carbon\Carbon::parse($mt->completed_date)->format('d/m/Y') : '-';
                             
-                            $createdAt = \Carbon\Carbon::parse($mt->created_at)->startOfDay();
                             $completedAt = $mt->completed_date ? \Carbon\Carbon::parse($mt->completed_date)->startOfDay() : null;
-                            $diff = $completedAt ? ((int) $createdAt->diffInDays($completedAt)) . ' hari' : '-';
+                            
+                            if ($completedAt) {
+                                if ($lastCompletedDate) {
+                                    $days = (int) $lastCompletedDate->diffInDays($completedAt);
+                                    $diff = $days . ' hari';
+                                } else {
+                                    $diff = '-';
+                                }
+                                $lastCompletedDate = $completedAt;
+                            } else {
+                                $diff = '-';
+                            }
+                            
                             $ts = $mt->created_at ? \Carbon\Carbon::parse($mt->created_at)->timestamp : 0;
                         } catch (\Throwable $e) {
                             $tglMati = '-';
@@ -146,7 +163,7 @@ class FloorPlanController extends Controller
                         $historyList[] = [
                             'tgl_mati'    => $tglMati,
                             'tgl_diganti' => $tglDiganti,
-                            'technician'  => $mt->assigned_to ?: 'Teknisi',
+                            'technician'  => $mt->technician?->name ?: 'Teknisi',
                             'notes'       => $notes,
                             'diff'        => $diff,
                             'ts'          => $ts,

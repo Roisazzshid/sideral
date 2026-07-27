@@ -54,7 +54,7 @@ class DashboardController extends Controller
         $statusData   = array_map(fn($s) => $statusCounts[$s] ?? 0, $statusLabels);
 
         // ── Tabel: Maintenance Terbaru ─────────────────────────────────────
-        $recentMaintenances = Maintenance::with(['floor.building', 'lamp.lampType'])
+        $recentMaintenances = Maintenance::with(['floor.building', 'lamp.lampType', 'technician'])
             ->orderByDesc('id')
             ->limit(5)
             ->get();

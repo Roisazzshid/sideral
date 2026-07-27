@@ -9,7 +9,7 @@ class Maintenance extends Model
 {
     protected $fillable = [
         'floor_id', 'lamp_id', 'type', 'description', 'priority', 'status', 
-        'scheduled_date', 'completed_date', 'assigned_to', 'resolution_notes',
+        'scheduled_date', 'completed_date', 'assigned_to_id', 'resolution_notes',
         'work_start_time', 'work_end_time'
     ];
 
@@ -26,5 +26,10 @@ class Maintenance extends Model
     public function lamp(): BelongsTo
     {
         return $this->belongsTo(Lamp::class);
+    }
+
+    public function technician(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to_id');
     }
 }

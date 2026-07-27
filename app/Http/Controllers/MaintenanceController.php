@@ -39,14 +39,21 @@ class MaintenanceController extends Controller
         $status = $request->query('status');
         $priority = $request->query('priority');
 
-        $maintenancesQuery = Maintenance::with(['floor.building', 'lamp.lampType'])
-            ->when($status, fn ($query) => $query->where('status', $status))
+        $maintenancesQuery = Maintenance::with(['floor.building', 'lamp.lampType', 'technician']);
+
+        if (auth()->user()->role === 'teknisi') {
+            $maintenancesQuery->where('assigned_to_id', auth()->id());
+        }
+
+        $maintenancesQuery->when($status, fn ($query) => $query->where('status', $status))
             ->when($priority, fn ($query) => $query->where('priority', $priority))
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('type', 'like', "%{$search}%")
                       ->orWhere('description', 'like', "%{$search}%")
-                      ->orWhere('assigned_to', 'like', "%{$search}%");
+                      ->orWhereHas('technician', function ($sub) use ($search) {
+                          $sub->where('name', 'like', "%{$search}%");
+                      });
                 });
             });
 
@@ -85,11 +92,14 @@ class MaintenanceController extends Controller
             }
         }
 
+        $technicians = \App\Models\User::where('role', 'teknisi')->orderBy('name')->get();
+
         return view('pages.sideral.maintenance', [
             'title' => 'Maintenance',
             'tab' => $tab,
             'maintenances' => $maintenances,
             'groupedJadwal' => $groupedJadwal,
+            'technicians' => $technicians,
             'buildings' => Building::with(['floors' => function ($q) {
                 $q->orderBy('floor_number')->orderBy('name');
             }, 'floors.lamps.lampType'])->orderBy('name')->get(),
@@ -113,6 +123,10 @@ class MaintenanceController extends Controller
 
     public function store(Request $request)
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
         $this->ensureColumnsExist();
 
         $validated = $request->validate([
@@ -124,7 +138,7 @@ class MaintenanceController extends Controller
             'status' => ['required', 'in:pending,in_progress,completed,cancelled'],
             'scheduled_date' => ['nullable', 'date'],
             'completed_date' => ['nullable', 'date'],
-            'assigned_to' => ['nullable', 'string', 'max:255'],
+            'assigned_to_id' => ['nullable', 'integer', 'exists:users,id'],
             'resolution_notes' => ['nullable', 'string'],
         ]);
 
@@ -152,7 +166,7 @@ class MaintenanceController extends Controller
             'status' => ['required', 'in:pending,in_progress,completed,cancelled'],
             'scheduled_date' => ['nullable', 'date'],
             'completed_date' => ['nullable', 'date'],
-            'assigned_to' => ['nullable', 'string', 'max:255'],
+            'assigned_to_id' => ['nullable', 'integer', 'exists:users,id'],
             'resolution_notes' => ['nullable', 'string'],
         ]);
 
@@ -198,6 +212,10 @@ class MaintenanceController extends Controller
 
     public function destroy(Maintenance $maintenance)
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
         $tab = request()->query('tab', 'daftar');
         $maintenance->delete();
 
@@ -211,7 +229,7 @@ class MaintenanceController extends Controller
             'completed_date' => ['required', 'date'],
             'work_start_time' => ['required', 'string'],
             'work_end_time' => ['required', 'string'],
-            'assigned_to' => ['required', 'string', 'max:255'],
+            'assigned_to_id' => ['required', 'integer', 'exists:users,id'],
             'resolution_notes' => ['nullable', 'string'],
         ]);
 
@@ -225,6 +243,10 @@ class MaintenanceController extends Controller
 
     public function approve(Request $request, Maintenance $maintenance)
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
         // If a specific lamp is linked, record transaction history and set lamp to active
         if ($maintenance->lamp_id) {
             $lamp = $maintenance->lamp;
@@ -237,7 +259,7 @@ class MaintenanceController extends Controller
                     'type'             => 'penggantian',
                     'quantity'         => 1,
                     'transaction_date' => $maintenance->completed_date ?? now()->toDateString(),
-                    'technician'       => $maintenance->assigned_to ?: 'Teknisi',
+                    'technician'       => $maintenance->technician?->name ?: 'Teknisi',
                     'notes'            => $maintenance->resolution_notes ?: 'Penggantian lampu via tiket #' . $maintenance->id,
                 ]);
 

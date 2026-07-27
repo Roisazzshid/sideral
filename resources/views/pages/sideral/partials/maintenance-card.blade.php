@@ -38,12 +38,12 @@
         </div>
 
         <!-- Assigned Technician -->
-        @if($item->assigned_to)
+        @if($item->technician)
             <div class="flex items-center gap-2 pt-1">
                 <div class="flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-teal-700 text-[10px] font-bold">
-                    {{ strtoupper(substr($item->assigned_to, 0, 1)) }}
+                    {{ strtoupper(substr($item->technician->name, 0, 1)) }}
                 </div>
-                <span class="text-xs text-gray-600 font-medium">Teknisi: {{ $item->assigned_to }}</span>
+                <span class="text-xs text-gray-600 font-medium">Teknisi: {{ $item->technician->name }}</span>
             </div>
         @endif
 
@@ -70,7 +70,7 @@
             data-status="{{ $item->status }}"
             data-scheduled-date="{{ $item->scheduled_date?->toDateString() }}"
             data-completed-date="{{ $item->completed_date?->toDateString() }}"
-            data-assigned-to="{{ $item->assigned_to }}"
+            data-assigned-to-id="{{ $item->assigned_to_id }}"
             data-resolution-notes="{{ $item->resolution_notes }}"
         >
             Rincian & Edit
@@ -82,7 +82,7 @@
                 class="btn-process-work inline-flex items-center gap-1 rounded bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 border border-amber-200"
                 data-action="{{ route('maintenance.work', $item) }}"
                 data-work-date="{{ now()->toDateString() }}"
-                data-assigned-to="{{ $item->assigned_to }}"
+                data-assigned-to-id="{{ $item->assigned_to_id }}"
             >
                 Proses Kerja
             </button>
@@ -95,17 +95,19 @@
                     data-completed-date="{{ $item->completed_date?->toDateString() ?: now()->toDateString() }}"
                     data-work-start-time="{{ $item->work_start_time }}"
                     data-work-end-time="{{ $item->work_end_time }}"
-                    data-assigned-to="{{ $item->assigned_to }}"
+                    data-assigned-to-id="{{ $item->assigned_to_id }}"
                     data-resolution-notes="{{ $item->resolution_notes }}"
                 >
                     Edit Kerja
                 </button>
+                @if(auth()->user()->role === 'admin')
                 <form method="POST" action="{{ route('maintenance.approve', $item) }}" class="inline" onsubmit="return confirm('Setujui pengerjaan ini? Stok lampu akan otomatis berkurang.');">
                     @csrf
                     <button type="submit" class="inline-flex items-center rounded bg-green-50 px-2 py-1 text-xs font-semibold text-green-700 hover:bg-green-100 border border-green-200">
                         Approve
                     </button>
                 </form>
+                @endif
             </div>
         @else
             <span class="text-[11px] font-bold uppercase tracking-wider {{ $item->status === 'completed' ? 'text-green-600' : 'text-gray-400' }}">

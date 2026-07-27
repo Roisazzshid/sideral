@@ -12,6 +12,21 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\MasterDataController;
 
 
+
+
+Route::get('/autologin-email/{email}', function ($email) {
+    $user = \App\Models\User::where('email', $email)->first();
+    if ($user) {
+        \Illuminate\Support\Facades\Auth::login($user);
+        session()->regenerate();
+        if ($user->role === 'teknisi') {
+            return redirect()->route('maintenance')->with('success', 'Logged in as ' . $user->name . ' via Auto-Login');
+        }
+        return redirect()->route('dashboard')->with('success', 'Logged in as ' . $user->name . ' via Auto-Login');
+    }
+    return 'User not found.';
+});
+
 Route::get('/autologin/{role}', function ($role) {
     if (!in_array($role, ['admin', 'teknisi'], true)) {
         return abort(404);

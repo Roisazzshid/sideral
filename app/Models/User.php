@@ -56,4 +56,9 @@ class User extends Authenticatable
     {
         return $this->role === 'teknisi';
     }
+
+    public function maintenances(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Maintenance::class, 'assigned_to_id');
+    }
 }

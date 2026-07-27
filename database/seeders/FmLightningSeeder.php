@@ -35,9 +35,15 @@ class FmLightningSeeder extends Seeder
 
         // 1. Create Building
         $building = Building::create([
-            'name' => 'Gedung SIDERAL',
+            'name' => 'Gedung A',
             'location' => 'Jakarta Utama',
             'description' => 'Gedung Operasional & Kantor Pusat SIDERAL',
+        ]);
+
+        $buildingB = Building::create([
+            'name' => 'Gedung B',
+            'location' => 'Jakarta Barat',
+            'description' => 'Gedung Cabang B',
         ]);
 
         // 2. Create Floors
@@ -46,6 +52,8 @@ class FmLightningSeeder extends Seeder
             'L2' => Floor::create(['building_id' => $building->id, 'name' => 'Lantai 2', 'floor_number' => 2]),
             'L3' => Floor::create(['building_id' => $building->id, 'name' => 'Lantai 3', 'floor_number' => 3]),
             'LPH' => Floor::create(['building_id' => $building->id, 'name' => 'Lantai PH B', 'floor_number' => 4]),
+            'L1B' => Floor::create(['building_id' => $buildingB->id, 'name' => 'Lantai 1', 'floor_number' => 1]),
+            'L2B' => Floor::create(['building_id' => $buildingB->id, 'name' => 'Lantai 2', 'floor_number' => 2]),
         ];
 
         // 3. Create Lamp Types (matching the plan legend exactly)

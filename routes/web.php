@@ -1,20 +1,15 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FloorPlanController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\LightingController;
-use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\MaintenanceController;
-use App\Http\Controllers\ReportController;
 use App\Http\Controllers\MasterDataController;
-
-
-
-
-
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\TransactionController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/autologin-email/{email}', function ($email) {
     $user = \App\Models\User::where('email', $email)->first();
@@ -33,7 +28,7 @@ Route::get('/autologin/{role}', function ($role) {
     if (!in_array($role, ['admin', 'teknisi'], true)) {
         return abort(404);
     }
-    
+
     $user = \App\Models\User::where('role', $role)->first();
     if ($user) {
         \Illuminate\Support\Facades\Auth::login($user);
@@ -118,7 +113,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/master-data/technician', [MasterDataController::class, 'storeTechnician'])->name('master-data.technician.store');
         Route::put('/master-data/technician/{technician}', [MasterDataController::class, 'updateTechnician'])->name('master-data.technician.update');
         Route::delete('/master-data/technician/{technician}', [MasterDataController::class, 'destroyTechnician'])->name('master-data.technician.destroy');
-
     });
 });
 

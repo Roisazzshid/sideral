@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Rule;
+use Illuminate\Validation\Rule;
 
 class MasterDataController extends Controller
 {
@@ -24,6 +24,12 @@ class MasterDataController extends Controller
             if (Schema::hasTable('users') && !Schema::hasColumn('users', 'plain_password')) {
                 Schema::table('users', function ($table) {
                     $table->string('plain_password')->nullable();
+                });
+            }
+            if (Schema::hasTable('users') && !Schema::hasColumn('users', 'building_id')) {
+                Schema::table('users', function ($table) {
+                    $table->unsignedBigInteger('building_id')->nullable()->after('role');
+                    $table->foreign('building_id')->references('id')->on('buildings')->onDelete('set null');
                 });
             }
         } catch (\Exception $e) {
@@ -47,7 +53,7 @@ class MasterDataController extends Controller
             ->select('floors.*')
             ->get();
 
-        $technicians = User::where('role', 'teknisi')->orderBy('name')->get();
+        $technicians = User::with('building')->where('role', 'teknisi')->orderBy('name')->get();
 
         return view('pages.sideral.master-data', [
             'title' => 'Master Data',
@@ -133,6 +139,7 @@ class MasterDataController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
+            'building_id' => ['nullable', 'integer', 'exists:buildings,id'],
         ]);
 
         User::create([
@@ -140,6 +147,7 @@ class MasterDataController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'plain_password' => $validated['password'],
+            'building_id' => $validated['building_id'] ?? null,
             'role' => 'teknisi',
         ]);
 
@@ -156,11 +164,13 @@ class MasterDataController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($technician->id)],
             'password' => ['nullable', 'string', 'min:6'],
+            'building_id' => ['nullable', 'integer', 'exists:buildings,id'],
         ]);
 
         $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'building_id' => $validated['building_id'] ?? null,
         ];
 
         if (!empty($validated['password'])) {

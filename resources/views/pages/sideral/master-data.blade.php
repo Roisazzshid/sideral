@@ -228,6 +228,7 @@
                                 <th class="w-16 px-5 py-3">No</th>
                                 <th class="px-5 py-3">Nama Teknisi</th>
                                 <th class="px-5 py-3">Email</th>
+                                <th class="px-5 py-3">Penempatan Gedung</th>
                                 <th class="px-5 py-3">Password</th>
                                 <th class="px-5 py-3">Tanggal Dibuat</th>
                                 <th class="w-28 px-5 py-3 text-right">Aksi</th>
@@ -239,6 +240,11 @@
                                     <td class="px-5 py-4 text-gray-500">{{ $index + 1 }}</td>
                                     <td class="px-5 py-4 font-semibold text-gray-800">{{ $t->name }}</td>
                                     <td class="px-5 py-4 text-gray-600">{{ $t->email }}</td>
+                                    <td class="px-5 py-4 text-gray-600">
+                                        <span class="inline-flex items-center gap-1 rounded bg-teal-50 px-2 py-1 text-xs font-semibold text-teal-800">
+                                            {{ $t->building ? $t->building->name : 'Umum / Semua Gedung' }}
+                                        </span>
+                                    </td>
                                     <td class="px-5 py-4 text-gray-600">
                                         <div class="flex items-center gap-2">
                                             <span id="pwText-{{ $t->id }}" class="font-mono text-gray-600">••••••</span>
@@ -261,6 +267,7 @@
                                                     data-name="{{ $t->name }}"
                                                     data-email="{{ $t->email }}"
                                                     data-password="{{ $t->plain_password ?? 'password' }}"
+                                                    data-building-id="{{ $t->building_id }}"
                                                     class="btn-edit-technician inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700">
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                     <path d="M12 20h9"></path>
@@ -311,6 +318,15 @@
                 <div>
                     <label class="mb-1 block text-sm font-medium text-gray-700">Email</label>
                     <input id="technicianEmail" name="email" type="email" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Penempatan Gedung (Opsional)</label>
+                    <select id="technicianBuilding" name="building_id" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
+                        <option value="">Umum / Semua Gedung</option>
+                        @foreach($buildings as $b)
+                            <option value="{{ $b->id }}">{{ $b->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div>
                     <label class="mb-1 block text-sm font-medium text-gray-700">Password</label>
@@ -504,6 +520,8 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             pwField.required = true;
             pwField.placeholder = "Minimal 6 karakter";
+            const bField = document.getElementById('technicianBuilding');
+            if (bField) bField.value = '';
         }
     });
 
@@ -517,6 +535,8 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('technicianName').value = this.dataset.name || '';
             document.getElementById('technicianEmail').value = this.dataset.email || '';
             document.getElementById('technicianPassword').value = this.dataset.password || '';
+            const bField = document.getElementById('technicianBuilding');
+            if (bField) bField.value = this.dataset.buildingId || '';
 
             tModal.openModal();
             resetPasswordToggle();

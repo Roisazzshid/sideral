@@ -532,6 +532,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const allBuildings = @json($buildings);
     const allLamps = @json($lamps);
+    const allTechnicians = @json($technicians);
     const allRooms = [];
 
     // Main CRUD Modal Elements
@@ -550,6 +551,24 @@ document.addEventListener('DOMContentLoaded', function () {
         assignedTo: document.getElementById('mtAssignedTo'),
         status: document.getElementById('mtStatus'),
     };
+
+    function filterTechnicians(buildingId) {
+        if (!fields.assignedTo) return;
+        const currentValue = fields.assignedTo.value;
+        fields.assignedTo.innerHTML = '<option value="">Pilih Teknisi</option>';
+        
+        const filtered = allTechnicians.filter(t => !t.building_id || t.building_id == buildingId);
+        filtered.forEach(tech => {
+            const opt = document.createElement('option');
+            opt.value = tech.id;
+            const activeText = tech.active_count == 0 ? 'Free' : `${tech.active_count} Tugas`;
+            opt.textContent = `${tech.name} (${activeText})`;
+            if (tech.id == currentValue) {
+                opt.selected = true;
+            }
+            fields.assignedTo.appendChild(opt);
+        });
+    }
 
     const btnOpenFloorPlanPicker = document.getElementById('btnOpenFloorPlanPicker');
     
@@ -664,6 +683,7 @@ document.addEventListener('DOMContentLoaded', function () {
         selectedLampIds = [];
         renderSelectedLamps();
         updateLampsAndRoom(null);
+        filterTechnicians(this.value);
     });
 
     fields.floor?.addEventListener('change', function () {
@@ -827,6 +847,7 @@ document.addEventListener('DOMContentLoaded', function () {
             fields.building.value = chosenLamp.floor.building_id;
             populateFloors(fields.building, fields.floor, chosenLamp.floor_id);
             updateLampsAndRoom(chosenLamp.floor_id);
+            filterTechnicians(chosenLamp.floor.building_id);
         }
         closeFloorPlanPicker();
     });
@@ -851,6 +872,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 fields.floor.value = allBuildings[0].floors[0].id;
                 updateLampsAndRoom(fields.floor.value);
             }
+            filterTechnicians(allBuildings[0].id);
         }
         openModal();
     });
@@ -875,6 +897,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     fields.building.value = lamp.floor.building_id;
                     populateFloors(fields.building, fields.floor, lamp.floor_id);
                     updateLampsAndRoom(lamp.floor_id, lamp.id);
+                    filterTechnicians(lamp.floor.building_id);
                 }
             } else if (floorId) {
                 const floor = allBuildings.flatMap(b => b.floors || []).find(f => f.id == floorId);
@@ -882,6 +905,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     fields.building.value = floor.building_id;
                     populateFloors(fields.building, fields.floor, floorId);
                     updateLampsAndRoom(floorId, null);
+                    filterTechnicians(floor.building_id);
                 }
             }
             

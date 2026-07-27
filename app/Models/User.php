@@ -21,6 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'plain_password',
+        'building_id',
         'role',
     ];
 
@@ -55,6 +57,11 @@ class User extends Authenticatable
     public function isTeknisi(): bool
     {
         return $this->role === 'teknisi';
+    }
+
+    public function building(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Building::class, 'building_id');
     }
 
     public function maintenances(): \Illuminate\Database\Eloquent\Relations\HasMany

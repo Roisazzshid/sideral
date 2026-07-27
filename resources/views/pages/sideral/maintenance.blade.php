@@ -446,15 +446,7 @@
                         <input id="workEndTime" name="work_end_time" type="time" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
                     </div>
                 </div>
-                <div>
-                    <label for="workAssignedTo" class="mb-1 block text-sm font-medium text-gray-700">Siapa yang Mengerjakan</label>
-                    <select id="workAssignedTo" name="assigned_to_id" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
-                        <option value="">Pilih Teknisi</option>
-                        @foreach($technicians as $tech)
-                            <option value="{{ $tech->id }}" @selected(auth()->user()->role === 'teknisi' && auth()->id() == $tech->id)>{{ $tech->name }} ({{ $tech->active_count }} job)</option>
-                        @endforeach
-                    </select>
-                </div>
+                <input type="hidden" name="assigned_to_id" value="{{ auth()->id() }}">
                 <div>
                     <label for="workResolutionNotes" class="mb-1 block text-sm font-medium text-gray-700">Keterangan (Opsional)</label>
                     <textarea id="workResolutionNotes" name="resolution_notes" rows="2" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100" placeholder="Catat detail pengerjaan..."></textarea>
@@ -940,7 +932,6 @@ document.addEventListener('DOMContentLoaded', function () {
         date: document.getElementById('workDate'),
         startTime: document.getElementById('workStartTime'),
         endTime: document.getElementById('workEndTime'),
-        assignedTo: document.getElementById('workAssignedTo'),
         notes: document.getElementById('workResolutionNotes'),
     };
 
@@ -961,7 +952,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             workForm.reset();
             workFields.date.value = new Date().toISOString().split('T')[0];
-            workFields.assignedTo.value = this.dataset.assignedToId || '';
 
             const now = new Date();
             const startHour = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
@@ -983,7 +973,6 @@ document.addEventListener('DOMContentLoaded', function () {
             workFields.date.value = this.dataset.completedDate || new Date().toISOString().split('T')[0];
             workFields.startTime.value = this.dataset.workStartTime || '';
             workFields.endTime.value = this.dataset.workEndTime || '';
-            workFields.assignedTo.value = this.dataset.assignedToId || '';
             workFields.notes.value = this.dataset.resolutionNotes || '';
 
             openWorkModal();

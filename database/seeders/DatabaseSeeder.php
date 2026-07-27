@@ -21,10 +21,10 @@ class DatabaseSeeder extends Seeder
 
         // Admin User
         User::create([
-            'email'    => 'admin@sideral.com',
-            'name'     => 'Admin SIDERAL',
+            'email' => 'admin@sideral.com',
+            'name' => 'Admin SIDERAL',
             'password' => Hash::make('password'),
-            'role'     => 'admin',
+            'role' => 'admin',
         ]);
 
         // Gedung A Technicians
@@ -40,7 +40,7 @@ class DatabaseSeeder extends Seeder
                 'email' => $t['email'],
                 'password' => Hash::make('password'),
                 'plain_password' => 'password',
-                'building_id' => 1, // Gedung A / Gedung SIDERAL
+                'building_id' => 1,  // Gedung A / Gedung SIDERAL
                 'role' => 'teknisi',
             ]);
         }
@@ -58,7 +58,7 @@ class DatabaseSeeder extends Seeder
                 'email' => $t['email'],
                 'password' => Hash::make('password'),
                 'plain_password' => 'password',
-                'building_id' => 2, // Gedung B
+                'building_id' => 2,  // Gedung B
                 'role' => 'teknisi',
             ]);
         }

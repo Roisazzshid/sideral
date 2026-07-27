@@ -92,7 +92,12 @@ class MaintenanceController extends Controller
             }
         }
 
-        $technicians = \App\Models\User::where('role', 'teknisi')->orderBy('name')->get();
+        $technicians = \App\Models\User::where('role', 'teknisi')
+            ->withCount(['maintenances as active_count' => function ($query) {
+                $query->whereIn('status', ['pending', 'in_progress']);
+            }])
+            ->orderBy('name')
+            ->get();
 
         return view('pages.sideral.maintenance', [
             'title' => 'Maintenance',

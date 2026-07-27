@@ -14,6 +14,8 @@ use App\Http\Controllers\MasterDataController;
 
 
 
+
+
 Route::get('/autologin-email/{email}', function ($email) {
     $user = \App\Models\User::where('email', $email)->first();
     if ($user) {

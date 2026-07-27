@@ -40,15 +40,6 @@ class AppServiceProvider extends ServiceProvider
                         'role'     => 'admin',
                     ]
                 );
-
-                User::updateOrCreate(
-                    ['email' => 'teknisi@sideral.com'],
-                    [
-                        'name'     => 'Teknisi SIDERAL',
-                        'password' => Hash::make('password'),
-                        'role'     => 'teknisi',
-                    ]
-                );
             }
         } catch (\Throwable $e) {
             // Silence if DB connection is not initialized during setup

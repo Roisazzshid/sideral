@@ -404,7 +404,7 @@
                         <select id="mtAssignedTo" name="assigned_to_id" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
                             <option value="">Pilih Teknisi</option>
                             @foreach($technicians as $tech)
-                                <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                <option value="{{ $tech->id }}">{{ $tech->name }} ({{ $tech->active_count == 0 ? 'Free' : $tech->active_count . ' Tugas' }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -447,7 +447,7 @@
                     <select id="workAssignedTo" name="assigned_to_id" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
                         <option value="">Pilih Teknisi</option>
                         @foreach($technicians as $tech)
-                            <option value="{{ $tech->id }}" @selected(auth()->user()->role === 'teknisi' && auth()->id() == $tech->id)>{{ $tech->name }}</option>
+                            <option value="{{ $tech->id }}" @selected(auth()->user()->role === 'teknisi' && auth()->id() == $tech->id)>{{ $tech->name }} ({{ $tech->active_count == 0 ? 'Free' : $tech->active_count . ' Tugas' }})</option>
                         @endforeach
                     </select>
                 </div>

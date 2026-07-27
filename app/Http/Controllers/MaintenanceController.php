@@ -132,6 +132,8 @@ class MaintenanceController extends Controller
         $validated = $request->validate([
             'floor_id' => ['required', 'integer', 'exists:floors,id'],
             'lamp_id' => ['nullable', 'integer', 'exists:lamps,id'],
+            'lamp_ids' => ['nullable', 'array'],
+            'lamp_ids.*' => ['integer', 'exists:lamps,id'],
             'type' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'priority' => ['required', 'in:high,medium,low'],
@@ -146,8 +148,17 @@ class MaintenanceController extends Controller
             $validated['completed_date'] = now()->toDateString();
         }
 
-        $maintenance = Maintenance::create($validated);
-        $this->syncLampStatus($maintenance);
+        if (!empty($request->lamp_ids)) {
+            foreach ($request->lamp_ids as $lampId) {
+                $data = $validated;
+                $data['lamp_id'] = $lampId;
+                $maintenance = Maintenance::create($data);
+                $this->syncLampStatus($maintenance);
+            }
+        } else {
+            $maintenance = Maintenance::create($validated);
+            $this->syncLampStatus($maintenance);
+        }
 
         return redirect()->route('maintenance', ['tab' => $request->query('tab', 'daftar')])
             ->with('success', 'Maintenance ticket berhasil dibuat.');

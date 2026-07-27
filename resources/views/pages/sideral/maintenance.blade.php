@@ -374,13 +374,7 @@
                                 Pilih dari Floor Plan
                             </button>
                         </div>
-                        <div id="selectedLampBadge" class="mt-2 hidden items-center justify-between rounded-lg bg-teal-50 border border-teal-200 px-3 py-2 text-xs font-medium text-teal-800">
-                            <span class="flex items-center gap-1.5">
-                                <span class="h-2 w-2 rounded-full bg-teal-600"></span>
-                                <span id="selectedLampInfo">Titik Lampu Dipilih: -</span>
-                            </span>
-                            <button id="btnClearSelectedLamp" type="button" class="text-teal-700 hover:text-teal-900 font-bold ml-2">Hapus</button>
-                        </div>
+                        <div id="selectedLampsContainer" class="mt-2 flex flex-wrap gap-2"></div>
                     </div>
                     <div class="md:col-span-2">
                         <label for="mtType" class="mb-1 block text-sm font-medium text-gray-700">Jenis Masalah / Pemeliharaan</label>
@@ -557,10 +551,39 @@ document.addEventListener('DOMContentLoaded', function () {
         status: document.getElementById('mtStatus'),
     };
 
-    const selectedLampBadge = document.getElementById('selectedLampBadge');
-    const selectedLampInfo = document.getElementById('selectedLampInfo');
-    const btnClearSelectedLamp = document.getElementById('btnClearSelectedLamp');
     const btnOpenFloorPlanPicker = document.getElementById('btnOpenFloorPlanPicker');
+    
+    let selectedLampIds = [];
+    let tempSelectedLampIds = [];
+    let isEditMode = false;
+
+    function renderSelectedLamps() {
+        const container = document.getElementById('selectedLampsContainer');
+        if (!container) return;
+        container.innerHTML = '';
+        
+        selectedLampIds.forEach(id => {
+            const lamp = allLamps.find(l => l.id == id);
+            if (lamp) {
+                const chip = document.createElement('span');
+                chip.className = 'inline-flex items-center gap-1.5 rounded-lg bg-teal-50 border border-teal-200 px-2.5 py-1.5 text-xs font-medium text-teal-800';
+                
+                const typeName = lamp.lamp_type ? lamp.lamp_type.name : 'Lampu';
+                chip.innerHTML = `
+                    <span class="h-1.5 w-1.5 rounded-full bg-teal-600"></span>
+                    <span>${lamp.code} (${typeName})</span>
+                    ${!isEditMode ? `<button type="button" class="text-teal-600 hover:text-teal-900 font-bold ml-1 text-sm focus:outline-none" onclick="removeSelectedLamp(${lamp.id})">×</button>` : ''}
+                    <input type="hidden" name="lamp_ids[]" value="${lamp.id}">
+                `;
+                container.appendChild(chip);
+            }
+        });
+    }
+
+    window.removeSelectedLamp = function(id) {
+        selectedLampIds = selectedLampIds.filter(x => x != id);
+        renderSelectedLamps();
+    };
 
     // Floor Plan Picker Modal Elements
     const fpPickerModal = document.getElementById('floorPlanPickerModal');
@@ -573,8 +596,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnConfirmFloorPlanPicker = document.getElementById('btnConfirmFloorPlanPicker');
     const btnCloseFloorPlanPicker = document.getElementById('btnCloseFloorPlanPicker');
     const btnCancelFloorPlanPicker = document.getElementById('btnCancelFloorPlanPicker');
-
-    let tempSelectedLampId = null;
 
     function openModal() {
         modal.classList.remove('hidden');
@@ -611,7 +632,8 @@ document.addEventListener('DOMContentLoaded', function () {
         fields.lamp.innerHTML = '<option value="">-- Tanpa Titik Lampu --</option>';
 
         if (!floorId) {
-            updateLampBadge(null);
+            selectedLampIds = [];
+            renderSelectedLamps();
             return;
         }
 
@@ -630,58 +652,41 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (selectedLampId) {
             fields.lamp.value = selectedLampId;
-            const chosenLamp = allLamps.find(l => l.id == selectedLampId);
-            if (chosenLamp) {
-                updateLampBadge(chosenLamp);
-            }
-        } else {
-            updateLampBadge(null);
+            selectedLampIds = [parseInt(selectedLampId)];
         }
-    }
-
-    function updateLampBadge(lamp) {
-        if (!lamp) {
-            selectedLampBadge.classList.add('hidden');
-            selectedLampBadge.classList.remove('flex');
-            selectedLampInfo.textContent = 'Titik Lampu Dipilih: -';
-        } else {
-            selectedLampBadge.classList.remove('hidden');
-            selectedLampBadge.classList.add('flex');
-            const areaName = lamp.floor ? `${lamp.floor.building?.name || ''} / ${lamp.floor.name || ''}` : '';
-            selectedLampInfo.textContent = `Titik Lampu Dipilih: ${lamp.code} (${lamp.lamp_type?.name || 'Lampu'}) ${areaName ? ' - ' + areaName : ''}`;
-        }
+        renderSelectedLamps();
     }
 
     // ── Main Form Events ──────────────────────────────────────────────────────
     fields.building?.addEventListener('change', function () {
         populateFloors(fields.building, fields.floor);
         fields.room.value = '';
+        selectedLampIds = [];
+        renderSelectedLamps();
         updateLampsAndRoom(null);
     });
 
     fields.floor?.addEventListener('change', function () {
+        selectedLampIds = [];
+        renderSelectedLamps();
         updateLampsAndRoom(this.value);
     });
 
     fields.lamp?.addEventListener('change', function () {
         const lId = this.value;
         if (lId) {
-            const lamp = allLamps.find(l => l.id == lId);
-            if (lamp) {
-                if (lamp.floor) {
-                    fields.building.value = lamp.floor.building_id;
-                    populateFloors(fields.building, fields.floor, lamp.floor_id);
+            if (isEditMode) {
+                selectedLampIds = [parseInt(lId)];
+            } else {
+                if (!selectedLampIds.includes(parseInt(lId))) {
+                    selectedLampIds.push(parseInt(lId));
                 }
-                updateLampBadge(lamp);
             }
-        } else {
-            updateLampBadge(null);
+            renderSelectedLamps();
+            if (!isEditMode) {
+                this.value = '';
+            }
         }
-    });
-
-    btnClearSelectedLamp?.addEventListener('click', function () {
-        fields.lamp.value = '';
-        updateLampBadge(null);
     });
 
     // ── Floor Plan Picker Modal Logic ──────────────────────────────────────────
@@ -697,7 +702,8 @@ document.addEventListener('DOMContentLoaded', function () {
             populateFloors(fpPickerBuilding, fpPickerFloor);
         }
 
-        renderFloorPlanCanvas(fpPickerFloor.value, fields.lamp.value);
+        tempSelectedLampIds = [...selectedLampIds];
+        renderFloorPlanCanvas(fpPickerFloor.value);
     }
 
     function closeFloorPlanPicker() {
@@ -714,10 +720,9 @@ document.addEventListener('DOMContentLoaded', function () {
         renderFloorPlanCanvas(this.value);
     });
 
-    function renderFloorPlanCanvas(floorId, currentSelectedLampId = null) {
+    function renderFloorPlanCanvas(floorId) {
         fpPickerDotsLayer.innerHTML = '';
-        tempSelectedLampId = currentSelectedLampId ? parseInt(currentSelectedLampId) : null;
-        btnConfirmFloorPlanPicker.disabled = !tempSelectedLampId;
+        btnConfirmFloorPlanPicker.disabled = tempSelectedLampIds.length === 0;
 
         if (!floorId) {
             fpPickerImage.classList.add('hidden');
@@ -726,6 +731,8 @@ document.addEventListener('DOMContentLoaded', function () {
             fpPickerSelectedText.textContent = 'Belum ada titik lampu terpilih.';
             return;
         }
+
+        updateFpPickerSelectedText();
 
         fetch(`{{ url('/floor-plan/data') }}?floor_id=${floorId}`)
             .then(res => res.json())
@@ -749,7 +756,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 lamps.forEach(lamp => {
                     const dot = document.createElement('div');
-                    const isSelected = tempSelectedLampId && tempSelectedLampId == lamp.id;
+                    const isSelected = tempSelectedLampIds.includes(lamp.id);
 
                     let bgClass = 'bg-green-500';
                     if (lamp.status === 'off') bgClass = 'bg-gray-500';
@@ -766,26 +773,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     dot.addEventListener('click', function (e) {
                         e.stopPropagation();
-                        fpPickerDotsLayer.querySelectorAll('.ring-4').forEach(d => {
-                            d.classList.remove('ring-4', 'ring-teal-400', 'scale-125', 'z-30');
-                        });
-                        dot.classList.add('ring-4', 'ring-teal-400', 'scale-125', 'z-30');
-                        tempSelectedLampId = lamp.id;
-                        btnConfirmFloorPlanPicker.disabled = false;
-                        fpPickerSelectedText.textContent = `Terpilih: ${lamp.code} (${lamp.lamp_type ? lamp.lamp_type.name : 'Lampu'})`;
+                        if (isEditMode) {
+                            tempSelectedLampIds = [lamp.id];
+                            fpPickerDotsLayer.querySelectorAll('.ring-4').forEach(d => {
+                                d.classList.remove('ring-4', 'ring-teal-400', 'scale-125', 'z-30');
+                            });
+                            dot.classList.add('ring-4', 'ring-teal-400', 'scale-125', 'z-30');
+                        } else {
+                            if (tempSelectedLampIds.includes(lamp.id)) {
+                                tempSelectedLampIds = tempSelectedLampIds.filter(id => id !== lamp.id);
+                                dot.classList.remove('ring-4', 'ring-teal-400', 'scale-125', 'z-30');
+                            } else {
+                                tempSelectedLampIds.push(lamp.id);
+                                dot.classList.add('ring-4', 'ring-teal-400', 'scale-125', 'z-30');
+                            }
+                        }
+                        btnConfirmFloorPlanPicker.disabled = tempSelectedLampIds.length === 0;
+                        updateFpPickerSelectedText();
                     });
 
                     fpPickerDotsLayer.appendChild(dot);
                 });
-
-                if (tempSelectedLampId) {
-                    const sel = lamps.find(l => l.id == tempSelectedLampId);
-                    if (sel) {
-                        fpPickerSelectedText.textContent = `Terpilih: ${sel.code} (${sel.lamp_type ? sel.lamp_type.name : 'Lampu'})`;
-                    }
-                } else {
-                    fpPickerSelectedText.textContent = 'Klik pada titik lampu di denah untuk memilih.';
-                }
             })
             .catch(err => {
                 console.error(err);
@@ -795,18 +803,30 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
+    function updateFpPickerSelectedText() {
+        if (tempSelectedLampIds.length > 0) {
+            fpPickerSelectedText.textContent = `Terpilih: ${tempSelectedLampIds.length} titik lampu`;
+        } else {
+            fpPickerSelectedText.textContent = 'Klik pada titik lampu di denah untuk memilih.';
+        }
+    }
+
     btnOpenFloorPlanPicker?.addEventListener('click', openFloorPlanPicker);
     btnCloseFloorPlanPicker?.addEventListener('click', closeFloorPlanPicker);
     btnCancelFloorPlanPicker?.addEventListener('click', closeFloorPlanPicker);
 
     btnConfirmFloorPlanPicker?.addEventListener('click', function () {
-        if (!tempSelectedLampId) return;
+        if (tempSelectedLampIds.length === 0) return;
 
-        const chosenLamp = allLamps.find(l => l.id == tempSelectedLampId);
+        selectedLampIds = [...tempSelectedLampIds];
+        renderSelectedLamps();
+
+        const firstSelectedId = selectedLampIds[0];
+        const chosenLamp = allLamps.find(l => l.id == firstSelectedId);
         if (chosenLamp && chosenLamp.floor) {
             fields.building.value = chosenLamp.floor.building_id;
             populateFloors(fields.building, fields.floor, chosenLamp.floor_id);
-            updateLampsAndRoom(chosenLamp.floor_id, chosenLamp.id);
+            updateLampsAndRoom(chosenLamp.floor_id);
         }
         closeFloorPlanPicker();
     });
@@ -816,9 +836,13 @@ document.addEventListener('DOMContentLoaded', function () {
         title.textContent = 'Buat Maintenance';
         form.action = @json(route('maintenance.store', ['tab' => $tab]));
         method.disabled = true;
+        isEditMode = false;
         form.reset();
 
         fields.scheduledDate.value = new Date().toISOString().split('T')[0];
+
+        selectedLampIds = [];
+        renderSelectedLamps();
 
         if (allBuildings.length > 0) {
             fields.building.value = allBuildings[0].id;
@@ -838,9 +862,12 @@ document.addEventListener('DOMContentLoaded', function () {
             form.action = this.dataset.action + '?tab=' + @json($tab);
             method.disabled = false;
             method.value = 'PUT';
+            isEditMode = true;
 
             const floorId = this.dataset.floorId;
             const lampId = this.dataset.lampId;
+
+            selectedLampIds = lampId ? [parseInt(lampId)] : [];
 
             if (lampId) {
                 const lamp = allLamps.find(l => l.id == lampId);
@@ -857,6 +884,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     updateLampsAndRoom(floorId, null);
                 }
             }
+            
+            renderSelectedLamps();
 
             fields.type.value = this.dataset.type || 'Lampu Mati';
             fields.priority.value = this.dataset.priority || 'medium';

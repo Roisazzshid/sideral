@@ -123,14 +123,14 @@ class FloorPlanController extends Controller
 
                 if ($lamp->maintenances) {
                     $sortedMts = $lamp->maintenances->sortBy(function ($mt) {
-                        return $mt->completed_date ? \Carbon\Carbon::parse($mt->completed_date)->timestamp : (\Carbon\Carbon::parse($mt->created_at)->timestamp ?? 0);
+                        return $mt->completed_date ? \Carbon\Carbon::parse($mt->completed_date)->timestamp : (\Carbon\Carbon::parse($mt->scheduled_date)->timestamp ?? 0);
                     })->values();
 
                     $lastCompletedDate = null;
 
                     foreach ($sortedMts as $mt) {
                         try {
-                            $tglMati = $mt->created_at ? \Carbon\Carbon::parse($mt->created_at)->format('d/m/Y') : '-';
+                            $tglMati = $mt->scheduled_date ? \Carbon\Carbon::parse($mt->scheduled_date)->format('d/m/Y') : '-';
                             $tglDiganti = $mt->completed_date ? \Carbon\Carbon::parse($mt->completed_date)->format('d/m/Y') : '-';
                             
                             $completedAt = $mt->completed_date ? \Carbon\Carbon::parse($mt->completed_date)->startOfDay() : null;
@@ -147,7 +147,7 @@ class FloorPlanController extends Controller
                                 $diff = '-';
                             }
                             
-                            $ts = $mt->created_at ? \Carbon\Carbon::parse($mt->created_at)->timestamp : 0;
+                            $ts = $mt->scheduled_date ? \Carbon\Carbon::parse($mt->scheduled_date)->timestamp : 0;
                         } catch (\Throwable $e) {
                             $tglMati = '-';
                             $tglDiganti = '-';

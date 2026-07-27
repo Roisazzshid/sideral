@@ -4,6 +4,7 @@
     $tabs = [
         'gedung' => 'Gedung',
         'lantai' => 'Lantai',
+        'teknisi' => 'Teknisi',
     ];
 
     $roomTypes = [
@@ -60,6 +61,10 @@
             @elseif($tab === 'lantai')
                 <button id="btnOpenFloorModal" type="button" class="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800">
                     + Tambah Lantai
+                </button>
+            @elseif($tab === 'teknisi')
+                <button id="btnOpenTechnicianModal" type="button" class="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800">
+                    + Tambah Teknisi
                 </button>
             @endif
         </div>
@@ -209,6 +214,122 @@
             </div>
         @endif
 
+        <!-- Tab 3: Teknisi -->
+        @if($tab === 'teknisi')
+            <div class="rounded-lg border border-gray-200 bg-white">
+                <div class="border-b border-gray-100 px-5 py-4">
+                    <h4 class="font-semibold text-gray-800">Data Teknisi</h4>
+                    <p class="mt-1 text-sm text-gray-500">Daftar akun teknisi yang terdaftar untuk penugasan pemeliharaan.</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-left text-sm">
+                        <thead class="border-b border-gray-100 bg-gray-50 text-xs font-semibold uppercase text-gray-500">
+                            <tr>
+                                <th class="w-16 px-5 py-3">No</th>
+                                <th class="px-5 py-3">Nama Teknisi</th>
+                                <th class="px-5 py-3">Email</th>
+                                <th class="px-5 py-3">Password</th>
+                                <th class="px-5 py-3">Tanggal Dibuat</th>
+                                <th class="w-28 px-5 py-3 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @forelse($technicians as $index => $t)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-5 py-4 text-gray-500">{{ $index + 1 }}</td>
+                                    <td class="px-5 py-4 font-semibold text-gray-800">{{ $t->name }}</td>
+                                    <td class="px-5 py-4 text-gray-600">{{ $t->email }}</td>
+                                    <td class="px-5 py-4 text-gray-600">
+                                        <div class="flex items-center gap-2">
+                                            <span id="pwText-{{ $t->id }}" class="font-mono text-gray-600">••••••</span>
+                                            <button type="button" 
+                                                    onclick="toggleTablePassword(this, '{{ $t->id }}', '{{ $t->plain_password ?? 'password' }}')" 
+                                                    class="text-gray-400 hover:text-gray-600 focus:outline-none"
+                                                    title="Tampilkan / Sembunyikan Password">
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td class="px-5 py-4 text-gray-500">{{ $t->created_at ? $t->created_at->format('d/m/Y') : '-' }}</td>
+                                    <td class="px-5 py-4 text-right">
+                                        <div class="flex justify-end gap-2">
+                                            <button type="button" 
+                                                    data-action="{{ route('master-data.technician.update', $t->id) }}"
+                                                    data-name="{{ $t->name }}"
+                                                    data-email="{{ $t->email }}"
+                                                    data-password="{{ $t->plain_password ?? 'password' }}"
+                                                    class="btn-edit-technician inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M12 20h9"></path>
+                                                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                                                </svg>
+                                            </button>
+                                            <form action="{{ route('master-data.technician.destroy', $t->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus teknisi ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M3 6h18"></path>
+                                                        <path d="M8 6V4h8v2"></path>
+                                                        <path d="M19 6l-1 14H6L5 6"></path>
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-5 py-12 text-center text-sm text-gray-500">Data teknisi tidak ditemukan.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+
+    </div>
+
+    <!-- MODAL 3: Technician (Teknisi) -->
+    <div id="technicianModal" class="fixed inset-0 z-[99999] hidden items-center justify-center bg-gray-900/50 p-4">
+        <div class="w-full max-w-lg rounded-lg bg-white shadow-xl">
+            <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+                <h3 id="technicianModalTitle" class="text-lg font-semibold text-gray-800">Tambah Teknisi</h3>
+                <button id="btnCloseTechnicianModal" type="button" class="text-gray-400 hover:text-gray-600">x</button>
+            </div>
+            <form id="technicianForm" method="POST" action="{{ route('master-data.technician.store') }}" class="space-y-4 px-5 py-5">
+                @csrf
+                <input id="technicianFormMethod" type="hidden" name="_method" value="PUT" disabled>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Nama Teknisi</label>
+                    <input id="technicianName" name="name" type="text" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Email</label>
+                    <input id="technicianEmail" name="email" type="email" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Password</label>
+                    <div class="relative">
+                        <input id="technicianPassword" name="password" type="password" class="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100" placeholder="Minimal 6 karakter">
+                        <button type="button" id="btnTogglePassword" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-gray-100 pt-4">
+                    <button id="btnCancelTechnicianModal" type="button" class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Batal</button>
+                    <button type="submit" class="rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">Simpan</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- MODAL 1: Building (Gedung) -->
@@ -356,6 +477,94 @@ document.addEventListener('DOMContentLoaded', function () {
 
             fModal.openModal();
         });
+    });
+
+    // 3. Technician Modal Setup
+    const btnTogglePassword = document.getElementById('btnTogglePassword');
+    const technicianPassword = document.getElementById('technicianPassword');
+
+    function resetPasswordToggle() {
+        if (technicianPassword) technicianPassword.type = 'password';
+        if (btnTogglePassword) {
+            btnTogglePassword.innerHTML = `
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+            `;
+        }
+    }
+
+    const tModal = initModal('technicianModal', 'btnOpenTechnicianModal', 'btnCloseTechnicianModal', 'btnCancelTechnicianModal', 'technicianForm', 'technicianFormMethod', 'technicianModalTitle', 'Tambah Teknisi', 'Edit Teknisi', function(isEdit) {
+        const pwField = document.getElementById('technicianPassword');
+        resetPasswordToggle();
+        if (isEdit) {
+            pwField.required = false;
+            pwField.placeholder = "Kosongkan jika tidak diubah";
+        } else {
+            pwField.required = true;
+            pwField.placeholder = "Minimal 6 karakter";
+        }
+    });
+
+    document.querySelectorAll('.btn-edit-technician').forEach(function (button) {
+        button.addEventListener('click', function () {
+            tModal.title.textContent = 'Edit Teknisi';
+            tModal.form.action = this.dataset.action;
+            tModal.method.disabled = false;
+            tModal.method.value = 'PUT';
+
+            document.getElementById('technicianName').value = this.dataset.name || '';
+            document.getElementById('technicianEmail').value = this.dataset.email || '';
+            document.getElementById('technicianPassword').value = this.dataset.password || '';
+
+            tModal.openModal();
+            resetPasswordToggle();
+            const pwField = document.getElementById('technicianPassword');
+            pwField.required = false;
+            pwField.placeholder = "Kosongkan jika tidak diubah";
+        });
+    });
+
+    window.toggleTablePassword = function(button, id, plainPassword) {
+        const span = document.getElementById(`pwText-${id}`);
+        if (!span) return;
+        
+        if (span.textContent === '••••••') {
+            span.textContent = plainPassword;
+            button.innerHTML = `
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                </svg>
+            `;
+        } else {
+            span.textContent = '••••••';
+            button.innerHTML = `
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+            `;
+        }
+    };
+
+    btnTogglePassword?.addEventListener('click', function () {
+        if (technicianPassword.type === 'password') {
+            technicianPassword.type = 'text';
+            this.innerHTML = `
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                </svg>
+            `;
+        } else {
+            technicianPassword.type = 'password';
+            this.innerHTML = `
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+            `;
+        }
     });
 
 });

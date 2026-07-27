@@ -115,6 +115,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/master-data/floor/{floor}', [MasterDataController::class, 'updateFloor'])->name('master-data.floor.update');
         Route::delete('/master-data/floor/{floor}', [MasterDataController::class, 'destroyFloor'])->name('master-data.floor.destroy');
 
+        Route::post('/master-data/technician', [MasterDataController::class, 'storeTechnician'])->name('master-data.technician.store');
+        Route::put('/master-data/technician/{technician}', [MasterDataController::class, 'updateTechnician'])->name('master-data.technician.update');
+        Route::delete('/master-data/technician/{technician}', [MasterDataController::class, 'destroyTechnician'])->name('master-data.technician.destroy');
+
     });
 });
 

@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name'     => 'Budi',
                 'password' => Hash::make('password'),
+                'plain_password' => 'password',
                 'role'     => 'teknisi',
             ]
         );
@@ -39,6 +40,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name'     => 'Candra',
                 'password' => Hash::make('password'),
+                'plain_password' => 'password',
                 'role'     => 'teknisi',
             ]
         );

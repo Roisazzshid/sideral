@@ -21,6 +21,11 @@ class MasterDataController extends Controller
                     $table->string('role')->default('operator');
                 });
             }
+            if (Schema::hasTable('users') && !Schema::hasColumn('users', 'plain_password')) {
+                Schema::table('users', function ($table) {
+                    $table->string('plain_password')->nullable();
+                });
+            }
         } catch (\Exception $e) {
             // Silence any issues if schema can't be modified (e.g. database locks)
         }
@@ -28,8 +33,8 @@ class MasterDataController extends Controller
 
     public function index(Request $request)
     {
-        $tab = $request->query('tab', 'gedung'); // gedung, lantai
-        if (!in_array($tab, ['gedung', 'lantai'], true)) {
+        $tab = $request->query('tab', 'gedung'); // gedung, lantai, teknisi
+        if (!in_array($tab, ['gedung', 'lantai', 'teknisi'], true)) {
             $tab = 'gedung';
         }
 
@@ -42,11 +47,14 @@ class MasterDataController extends Controller
             ->select('floors.*')
             ->get();
 
+        $technicians = User::where('role', 'teknisi')->orderBy('name')->get();
+
         return view('pages.sideral.master-data', [
             'title' => 'Master Data',
             'tab' => $tab,
             'buildings' => $buildings,
             'floors' => $floors,
+            'technicians' => $technicians,
         ]);
     }
 
@@ -116,5 +124,62 @@ class MasterDataController extends Controller
     {
         $floor->delete();
         return redirect()->route('master-data', ['tab' => 'lantai'])->with('success', 'Lantai berhasil dihapus.');
+    }
+
+    // ── Technician CRUD ───────────────────────────────────────────────
+    public function storeTechnician(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:6'],
+        ]);
+
+        User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'plain_password' => $validated['password'],
+            'role' => 'teknisi',
+        ]);
+
+        return redirect()->route('master-data', ['tab' => 'teknisi'])->with('success', 'Teknisi berhasil ditambahkan.');
+    }
+
+    public function updateTechnician(Request $request, User $technician)
+    {
+        if ($technician->role !== 'teknisi') {
+            abort(403, 'Hanya dapat memperbarui teknisi.');
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($technician->id)],
+            'password' => ['nullable', 'string', 'min:6'],
+        ]);
+
+        $updateData = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ];
+
+        if (!empty($validated['password'])) {
+            $updateData['password'] = Hash::make($validated['password']);
+            $updateData['plain_password'] = $validated['password'];
+        }
+
+        $technician->update($updateData);
+
+        return redirect()->route('master-data', ['tab' => 'teknisi'])->with('success', 'Teknisi berhasil diperbarui.');
+    }
+
+    public function destroyTechnician(User $technician)
+    {
+        if ($technician->role !== 'teknisi') {
+            abort(403, 'Hanya dapat menghapus teknisi.');
+        }
+
+        $technician->delete();
+        return redirect()->route('master-data', ['tab' => 'teknisi'])->with('success', 'Teknisi berhasil dihapus.');
     }
 }

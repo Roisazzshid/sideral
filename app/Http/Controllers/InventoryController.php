@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Lamp;
 use App\Models\LampType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -49,8 +50,16 @@ class InventoryController extends Controller
         $countPersegiPanjang = $lampTypes->where('shape', 'persegi_panjang')->count();
         $countAktif = $lampTypes->where('status', 'aktif')->count();
 
+        $tab = $request->query('tab', 'jenis-lampu');
+
+        $lamps = Lamp::with(['floor.building', 'lampType'])
+            ->orderBy('code')
+            ->get();
+
         return view('pages.sideral.inventory', [
-            'title' => 'Jenis Lampu',
+            'title' => 'Inventory',
+            'tab' => $tab,
+            'lamps' => $lamps,
             'lampTypes' => $lampTypes,
             'search' => $search,
             'shapeFilter' => $shapeFilter,
@@ -126,5 +135,66 @@ class InventoryController extends Controller
         $lampType->delete();
 
         return redirect()->route('inventory')->with('success', 'Jenis lampu berhasil dihapus.');
+    }
+
+    public function updateLamp(Request $request, Lamp $lamp)
+    {
+        $validated = $request->validate([
+            'code'           => ['required', 'string', 'max:50'],
+            'status'         => ['required', 'in:on,off,rusak,perbaikan'],
+            'installed_date' => ['nullable', 'date'],
+            'notes'          => ['nullable', 'string'],
+        ]);
+
+        $lamp->update($validated);
+
+        return redirect()->route('inventory', ['tab' => 'lampu-terpasang'])->with('success', 'Data titik lampu berhasil diperbarui.');
+    }
+
+    public function destroyLamp(Lamp $lamp)
+    {
+        $lamp->delete();
+
+        return redirect()->route('inventory', ['tab' => 'lampu-terpasang'])->with('success', 'Titik lampu berhasil dihapus.');
+    }
+
+    public function lampHistory(Lamp $lamp)
+    {
+        $maintenances = $lamp->maintenances()
+            ->with('technician')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($m) {
+                return [
+                    'id'             => $m->id,
+                    'type'           => $m->type,
+                    'status'         => $m->status,
+                    'priority'       => $m->priority,
+                    'scheduled_date' => $m->scheduled_date?->format('d/m/Y'),
+                    'completed_date' => $m->completed_date?->format('d/m/Y'),
+                    'technician'     => $m->technician?->name ?? '-',
+                    'notes'          => $m->resolution_notes,
+                ];
+            });
+
+        $transactions = $lamp->transactions()
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($t) {
+                return [
+                    'date'  => $t->created_at->format('d/m/Y'),
+                    'type'  => $t->type ?? '-',
+                    'notes' => $t->notes ?? '-',
+                ];
+            });
+
+        return response()->json([
+            'lamp'         => [
+                'code'   => $lamp->code,
+                'status' => $lamp->status,
+            ],
+            'maintenances' => $maintenances,
+            'transactions' => $transactions,
+        ]);
     }
 }

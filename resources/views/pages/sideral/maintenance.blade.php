@@ -156,6 +156,7 @@
                                         <div class="flex justify-end gap-1.5">
                                             @if($mt->status === 'pending')
                                                 <!-- State 1: Baru (Pending) - Blue Edit & Yellow Process -->
+                                                @if(auth()->user()->role === 'admin')
                                                 <button
                                                     type="button"
                                                     class="btn-edit-maintenance inline-flex h-8 w-8 items-center justify-center rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50"
@@ -175,6 +176,7 @@
                                                         <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
                                                     </svg>
                                                 </button>
+                                                @endif
                                                 
                                                 <button
                                                     type="button"
@@ -190,6 +192,7 @@
                                                 </button>
                                             @elseif($mt->status === 'in_progress')
                                                 <!-- State 2: Sudah Dikerjakan - Blue Edit Work, Green Approve, Red Delete -->
+                                                @if(auth()->user()->role === 'admin')
                                                 <button
                                                     type="button"
                                                     class="btn-edit-work inline-flex h-8 w-8 items-center justify-center rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50"
@@ -206,6 +209,7 @@
                                                         <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
                                                     </svg>
                                                 </button>
+                                                @endif
 
                                                 @if(auth()->user()->role === 'admin')
                                                 <form method="POST" action="{{ route('maintenance.approve', $mt) }}" class="inline" onsubmit="return confirm('Setujui pengerjaan ini? Status titik lampu akan otomatis kembali Aktif.');">
@@ -404,7 +408,7 @@
                         <select id="mtAssignedTo" name="assigned_to_id" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
                             <option value="">Pilih Teknisi</option>
                             @foreach($technicians as $tech)
-                                <option value="{{ $tech->id }}">{{ $tech->name }} ({{ $tech->active_count == 0 ? 'Free' : $tech->active_count . ' Tugas' }})</option>
+                                <option value="{{ $tech->id }}">{{ $tech->name }} ({{ $tech->active_count }} job)</option>
                             @endforeach
                         </select>
                     </div>
@@ -447,7 +451,7 @@
                     <select id="workAssignedTo" name="assigned_to_id" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-100">
                         <option value="">Pilih Teknisi</option>
                         @foreach($technicians as $tech)
-                            <option value="{{ $tech->id }}" @selected(auth()->user()->role === 'teknisi' && auth()->id() == $tech->id)>{{ $tech->name }} ({{ $tech->active_count == 0 ? 'Free' : $tech->active_count . ' Tugas' }})</option>
+                            <option value="{{ $tech->id }}" @selected(auth()->user()->role === 'teknisi' && auth()->id() == $tech->id)>{{ $tech->name }} ({{ $tech->active_count }} job)</option>
                         @endforeach
                     </select>
                 </div>
@@ -561,7 +565,7 @@ document.addEventListener('DOMContentLoaded', function () {
         filtered.forEach(tech => {
             const opt = document.createElement('option');
             opt.value = tech.id;
-            const activeText = tech.active_count == 0 ? 'Free' : `${tech.active_count} Tugas`;
+            const activeText = `${tech.active_count} job`;
             opt.textContent = `${tech.name} (${activeText})`;
             if (tech.id == currentValue) {
                 opt.selected = true;

@@ -90,6 +90,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/inventory/lamp-type/{lampType}', [InventoryController::class, 'updateLampType'])->name('inventory.lamp-type.update');
         Route::delete('/inventory/lamp-type/{lampType}', [InventoryController::class, 'destroyLampType'])->name('inventory.lamp-type.destroy');
 
+        // Lampu Terpasang
+        Route::put('/inventory/lamp/{lamp}', [InventoryController::class, 'updateLamp'])->name('inventory.lamp.update');
+        Route::delete('/inventory/lamp/{lamp}', [InventoryController::class, 'destroyLamp'])->name('inventory.lamp.destroy');
+        Route::get('/inventory/lamp/{lamp}/history', [InventoryController::class, 'lampHistory'])->name('inventory.lamp.history');
+
         // Transactions
         Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions');
         Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
